@@ -46,6 +46,7 @@ class LoginView(QWidget):
         form_layout.addStretch()
         form_layout.addWidget(self.label_user)
         form_layout.addWidget(self.input_user)
+        form_layout.addSpacing(20)
         form_layout.addWidget(self.label_pass)
         form_layout.addWidget(self.input_pass)
         form_layout.addWidget(self.btn_login)
