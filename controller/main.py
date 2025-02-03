@@ -17,7 +17,7 @@ class Controller:
         password = self.login_view.input_pass.text()
 
         if self.model.check_user(username, password):
-            QMessageBox.information(self.login_view, "Login Successful", "Welcome!")
+            # QMessageBox.information(self.login_view, "Login Successful", "Welcome!")
             self.main_view = MainView()
             self.main_view.show()
             self.login_view.close()

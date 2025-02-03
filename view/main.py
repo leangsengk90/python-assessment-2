@@ -8,7 +8,8 @@ class MainView(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Main Window")
-        self.setGeometry(100, 100, 800, 600)
+        self.resize(1200, 800)
+        self.center_window()
 
         self.toolbar = QToolBar("Main Toolbar")
         self.addToolBar(self.toolbar)
@@ -45,6 +46,12 @@ class MainView(QMainWindow):
             self.toolbar.addAction(action)
 
         self.show_page("Order")
+
+    def center_window(self):
+        screen = QApplication.primaryScreen().geometry()
+        x = (screen.width() - self.width()) // 2
+        y = (screen.height() - self.height()) // 2
+        self.move(x, y)
 
     def show_page(self, page_name):
         widget = self.pages.get(page_name)
