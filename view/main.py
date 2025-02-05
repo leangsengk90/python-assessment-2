@@ -33,12 +33,12 @@ class MainView(QMainWindow):
             self.stacked_widget.addWidget(widget)
 
         icons = {
-            "Order": "../images/order.png",
-            "Menu": "../images/menu.png",
-            "Table": "../images/table.png",
-            "Reservation": "../images/reservation.png",
-            "Bill": "../images/bill.png",
-            "Report": "../images/report.png",
+            "Order": "../icons/order.png",
+            "Menu": "../icons/menu.png",
+            "Table": "../icons/table.png",
+            "Reservation": "../icons/reservation.png",
+            "Bill": "../icons/bill.png",
+            "Report": "../icons/report.png",
         }
 
         for name, icon_path in icons.items():

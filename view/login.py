@@ -22,7 +22,7 @@ class LoginView(QWidget):
         # Left side - Image
         self.image_label = QLabel()
         self.image_label.setPixmap(
-            QPixmap("../images/login.png"))
+            QPixmap("../icons/login.png"))
         self.image_label.setFixedSize(360, 600)
         self.image_label.setScaledContents(True)
 

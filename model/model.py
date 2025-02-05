@@ -1,5 +1,8 @@
 import os
+import shutil
 import sqlite3
+import uuid
+
 import bcrypt  # Import bcrypt for password hashing
 
 # Model: Handles database interactions
@@ -59,9 +62,9 @@ class Model:
         self.cursor.execute("SELECT COUNT(*) FROM menu")
         if self.cursor.fetchone()[0] == 0:
             sample_data = [
-                ("Fried Rice", 2.5, "../images/fried_rice.png"),
-                ("Coca Cola", 1.2, "../images/coca_cola.png"),
-                ("Burger", 3.0, "../images/burger.png"),
+                ("Fried Rice", 2.5, "fried_rice.png"),
+                ("Coca Cola", 1.2, "coca_cola.png"),
+                ("Burger", 3.0, "burger.png"),
             ]
             self.cursor.executemany("INSERT INTO menu (name, unit_price, image) VALUES (?, ?, ?)", sample_data)
             self.conn.commit()
@@ -80,4 +83,23 @@ class Model:
 
     def update_menu_item(self, menu_id, name, price, image):
         self.cursor.execute("UPDATE menu SET name=?, unit_price=?, image=? WHERE id=?", (name, price, image, menu_id))
+        self.conn.commit()
+
+    def add_menu_item(self, name, unit_price, image_path):
+        # Ensure the images folder exists
+        if not os.path.exists("images"):
+            os.makedirs("images")
+
+        # Generate a unique image filename using UUID
+        unique_image_name = f"{uuid.uuid4().hex}.png"  # UUID will create a unique name for the image
+
+        # Define the target path in the images folder
+        target_path = os.path.join("images", unique_image_name)
+
+        # Copy the image to the images folder with the new unique name
+        shutil.copy(image_path, target_path)
+
+        # Insert the new menu item into the database with the new image filename
+        self.cursor.execute("INSERT INTO menu (name, unit_price, image) VALUES (?, ?, ?)",
+                            (name, unit_price, unique_image_name))
         self.conn.commit()
