@@ -3,6 +3,8 @@ from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, \
     QMessageBox, QToolBar, QStackedWidget
 
+from view.menu import MenuView
+
 
 class MainView(QMainWindow):
     def __init__(self):
@@ -20,7 +22,7 @@ class MainView(QMainWindow):
 
         self.pages = {
             "Order": QLabel("Order Page"),
-            "Menu": QLabel("Menu Page"),
+            "Menu": MenuView(),
             "Table": QLabel("Table Page"),
             "Reservation": QLabel("Reservation Page"),
             "Bill": QLabel("Bill Page"),

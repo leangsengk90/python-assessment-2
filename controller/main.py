@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLa
 import sys
 from view.login import LoginView
 from view.main import MainView
-from model.users import Model
+from model.model import Model
 
 # Controller: Handles user interaction and business logic
 class Controller:
