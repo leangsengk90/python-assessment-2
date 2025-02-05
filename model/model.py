@@ -81,10 +81,6 @@ class Model:
             print(f"Error deleting menu item: {e}")
             self.conn.rollback()  # Rollback in case of error
 
-    def update_menu_item(self, menu_id, name, price, image):
-        self.cursor.execute("UPDATE menu SET name=?, unit_price=?, image=? WHERE id=?", (name, price, image, menu_id))
-        self.conn.commit()
-
     def add_menu_item(self, name, unit_price, image_path):
         # Ensure the images folder exists
         if not os.path.exists("images"):
@@ -102,4 +98,30 @@ class Model:
         # Insert the new menu item into the database with the new image filename
         self.cursor.execute("INSERT INTO menu (name, unit_price, image) VALUES (?, ?, ?)",
                             (name, unit_price, unique_image_name))
+        self.conn.commit()
+
+    def get_menu_item(self, menu_id):
+        # Fetch the menu item by menu_id from the database
+        self.cursor.execute("SELECT name, unit_price, image FROM menu WHERE id = ?", (menu_id,))
+        result = self.cursor.fetchone()
+        if result:
+            return {'name': result[0], 'unit_price': result[1], 'image': result[2]}
+        return None
+
+    def update_menu_item(self, menu_id, name, unit_price, image_path):
+        # Ensure the images folder exists
+        if not os.path.exists("images"):
+            os.makedirs("images")
+
+        # Generate a unique image filename using UUID
+        unique_image_name = f"{uuid.uuid4().hex}.png"  # Generate unique name with .png extension
+        target_path = os.path.join("images", unique_image_name)
+
+        # If the image doesn't already exist in the images folder, copy it there
+        if not os.path.exists(target_path):
+            shutil.copy(image_path, target_path)
+
+        # Update the menu item in the database using the column 'id'
+        self.cursor.execute("UPDATE menu SET name = ?, unit_price = ?, image = ? WHERE id = ?",
+                            (name, unit_price, unique_image_name, menu_id))
         self.conn.commit()
