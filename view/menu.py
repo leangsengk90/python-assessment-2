@@ -205,7 +205,7 @@ class UpdateItemDialog(QDialog):
         self.unit_price_input.setFixedHeight(30)
 
         self.image_label = QLabel("Image Path:")
-        self.image_input = QLineEdit(self.current_item['image'])
+        self.image_input = QLineEdit(self.get_absolute_path(self.current_item['image']))
         self.image_input.setFixedHeight(30)
         self.image_button = QPushButton("Browse...")
         self.image_button.setStyleSheet("""
@@ -239,6 +239,12 @@ class UpdateItemDialog(QDialog):
         self.layout.addWidget(self.update_button)
 
         self.setLayout(self.layout)
+
+    def get_absolute_path(self, image_path):
+        """Convert relative image path to absolute path if needed."""
+        if not os.path.isabs(image_path):  # If the path is not absolute
+            image_path = os.path.abspath(os.path.join("images", image_path))  # Assuming images folder
+        return image_path
 
     def select_image(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Image", "", "Images (*.png *.xpm *.jpg)")
