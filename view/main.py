@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLa
     QMessageBox, QToolBar, QStackedWidget
 
 from view.menu import MenuView
+from view.order import OrderView
 
 
 class MainView(QMainWindow):
@@ -21,7 +22,7 @@ class MainView(QMainWindow):
         self.setCentralWidget(self.stacked_widget)
 
         self.pages = {
-            "Order": QLabel("Order Page"),
+            "Order": OrderView(),
             "Menu": MenuView(),
             "Table": QLabel("Table Page"),
             "Reservation": QLabel("Reservation Page"),
@@ -47,7 +48,7 @@ class MainView(QMainWindow):
             action.triggered.connect(lambda checked, n=name: self.show_page(n))
             self.toolbar.addAction(action)
 
-        self.show_page("Order")
+        self.show_page("Order")  # Show "Order" page by default
 
     def center_window(self):
         screen = QApplication.primaryScreen().geometry()
@@ -59,3 +60,9 @@ class MainView(QMainWindow):
         widget = self.pages.get(page_name)
         if widget:
             self.stacked_widget.setCurrentWidget(widget)
+
+            # Check if the "Order" page is selected and refresh data
+            if page_name == "Order":
+                order_view = self.pages.get("Order")
+                if order_view:
+                    order_view.refresh_menu_data()  # Reload data from the database
