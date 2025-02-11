@@ -5,6 +5,8 @@ import uuid
 
 import bcrypt  # Import bcrypt for password hashing
 
+db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
+
 # Model: Handles database interactions
 class Model:
     def __init__(self):
@@ -13,9 +15,15 @@ class Model:
         # Remove the database file if it exists
         if os.path.exists(self.db_path):
             os.remove(self.db_path)
+            # os.remove("rms.db-shm")
+            # os.remove("rms.db-wal")
             print("rms.db has been removed.")
 
-        self.conn = sqlite3.connect("rms.db", isolation_level="EXCLUSIVE")
+        # self.conn = sqlite3.connect("rms.db", isolation_level="EXCLUSIVE")
+        self.conn = sqlite3.connect("rms.db", check_same_thread=False, timeout=10)
+        self.conn.execute("PRAGMA journal_mode=WAL;")  # Enables write-ahead logging
+        os.chmod(db_path, 0o777)  # Equivalent to `chmod 777 rms.db`
+
         self.cursor = self.conn.cursor()
         self.create_table()
         self.initialize_data()
@@ -36,6 +44,12 @@ class Model:
                 image TEXT NOT NULL
             )
         """)
+        self.cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tables (
+                    table_number INTEGER PRIMARY KEY,
+                    description TEXT
+                )
+            """)
         self.conn.commit()
 
     def check_user(self, username, password):
@@ -109,6 +123,19 @@ class Model:
                 ("Burger", 3.0, "burger.png"),
             ]
             self.cursor.executemany("INSERT INTO menu (name, unit_price, image) VALUES (?, ?, ?)", sample_data)
+
+            # Insert sample table numbers
+            self.cursor.execute("SELECT COUNT(*) FROM tables")
+            if self.cursor.fetchone()[0] == 0:
+                table_data = [
+                    (1, "Window-side table"),
+                    (2, "Near the kitchen"),
+                    (3, "Outdoor seating"),
+                    (4, "Private dining area"),
+                    (5, "Bar counter seat"),
+                ]
+            self.cursor.executemany("INSERT INTO tables (table_number, description) VALUES (?, ?)", table_data)
+
             self.conn.commit()
 
     def get_menu_items(self):
@@ -118,7 +145,7 @@ class Model:
     def delete_menu_item(self, menu_id):
         try:
             self.cursor.execute("DELETE FROM menu WHERE id=?", (menu_id,))
-            self.conn.commit()  # Make sure to commit after executing the delete
+            self.conn.commit()
         except sqlite3.Error as e:
             print(f"Error deleting menu item: {e}")
             self.conn.rollback()  # Rollback in case of error
@@ -167,3 +194,37 @@ class Model:
         self.cursor.execute("UPDATE menu SET name = ?, unit_price = ?, image = ? WHERE id = ?",
                             (name, unit_price, unique_image_name, menu_id))
         self.conn.commit()
+
+    def get_tables(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT table_number, description FROM tables")
+        data = cursor.fetchall()
+        # conn.close()
+        return data
+
+    def delete_table(self, table_number):
+        try:
+            self.cursor.execute("DELETE FROM tables WHERE table_number = ?", (table_number,))
+            self.conn.commit()
+        except sqlite3.Error as e:
+            print(f"Error deleting table: {e}")
+            self.conn.rollback()
+
+    def update_table(self, table_number, new_description):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE tables SET description = ? WHERE table_number = ?",
+                       (new_description, table_number))
+        conn.commit()
+        # conn.close()
+
+    def add_table(self, table_number, description):
+        """Add a new table to the database."""
+        try:
+            # Insert new table data into the database
+            self.cursor.execute("INSERT INTO tables (table_number, description) VALUES (?, ?)",
+                                (table_number, description))
+            self.conn.commit()  # Commit the changes to the database
+        except sqlite3.Error as e:
+            print(f"Error inserting table: {e}")

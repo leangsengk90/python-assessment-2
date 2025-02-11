@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLa
 
 from view.menu import MenuView
 from view.order import OrderView
+from view.tables import TableView
 
 
 class MainView(QMainWindow):
@@ -24,7 +25,7 @@ class MainView(QMainWindow):
         self.pages = {
             "Order": OrderView(),
             "Menu": MenuView(),
-            "Table": QLabel("Table Page"),
+            "Table": TableView(),
             "Reservation": QLabel("Reservation Page"),
             "Bill": QLabel("Bill Page"),
             "Report": QLabel("Report Page"),
@@ -61,8 +62,9 @@ class MainView(QMainWindow):
         if widget:
             self.stacked_widget.setCurrentWidget(widget)
 
-            # Check if the "Order" page is selected and refresh data
-            if page_name == "Order":
-                order_view = self.pages.get("Order")
-                if order_view:
-                    order_view.refresh_menu_data()  # Reload data from the database
+            # Error when call it
+            # # Check if the "Order" page is selected and refresh data
+            # if page_name == "Order":
+            #     order_view = self.pages.get("Order")
+            #     if order_view:
+            #         order_view.refresh_menu_data()  # Reload data from the database

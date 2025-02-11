@@ -80,7 +80,7 @@ class OrderView(QWidget):
         db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
         image_base_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/images"
 
-        with sqlite3.connect(db_path) as conn:
+        with sqlite3.connect(db_path, check_same_thread=False, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, name, unit_price, image FROM menu")
             menu_items = cursor.fetchall()
@@ -161,6 +161,7 @@ class OrderView(QWidget):
         grand_total = subtotal + tax - discount
         self.grand_total_label.setText(f"Grand Total: ${grand_total:.2f}")
 
-    def refresh_menu_data(self):
-        # Code to refresh the data from the database
-        self.load_menu_data()  # Reload the menu data
+    # Error when call it
+    # def refresh_menu_data(self):
+    #     # Code to refresh the data from the database
+    #     self.load_menu_data()  # Reload the menu data
