@@ -200,7 +200,7 @@ class Model:
         cursor = conn.cursor()
         cursor.execute("SELECT table_number, description FROM tables")
         data = cursor.fetchall()
-        # conn.close()
+        conn.close()
         return data
 
     def delete_table(self, table_number):
@@ -217,7 +217,7 @@ class Model:
         cursor.execute("UPDATE tables SET description = ? WHERE table_number = ?",
                        (new_description, table_number))
         conn.commit()
-        # conn.close()
+        conn.close()
 
     def add_table(self, table_number, description):
         """Add a new table to the database."""

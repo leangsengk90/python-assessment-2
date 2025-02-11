@@ -63,7 +63,7 @@ class MainView(QMainWindow):
             self.stacked_widget.setCurrentWidget(widget)
 
             # Error when call it
-            # # Check if the "Order" page is selected and refresh data
+            # Check if the "Order" page is selected and refresh data
             # if page_name == "Order":
             #     order_view = self.pages.get("Order")
             #     if order_view:

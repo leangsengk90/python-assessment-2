@@ -163,5 +163,7 @@ class OrderView(QWidget):
 
     # Error when call it
     # def refresh_menu_data(self):
-    #     # Code to refresh the data from the database
-    #     self.load_menu_data()  # Reload the menu data
+    #     try:
+    #         self.load_menu_data()  # Reload the menu data
+    #     except Exception as e:
+    #         print(f"Failed to refresh menu data: {e}")
