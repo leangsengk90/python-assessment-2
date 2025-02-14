@@ -2,7 +2,6 @@ import os
 import shutil
 import sqlite3
 import uuid
-
 import bcrypt  # Import bcrypt for password hashing
 
 db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
@@ -10,19 +9,17 @@ db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
 # Model: Handles database interactions
 class Model:
     def __init__(self):
-        self.db_path = "rms.db"
+        self.db_path = db_path
 
         # Remove the database file if it exists
         if os.path.exists(self.db_path):
             os.remove(self.db_path)
-            # os.remove("rms.db-shm")
-            # os.remove("rms.db-wal")
             print("rms.db has been removed.")
 
-        # self.conn = sqlite3.connect("rms.db", isolation_level="EXCLUSIVE")
-        self.conn = sqlite3.connect("rms.db", check_same_thread=False, timeout=10)
+        # Open the connection and set the cursor once
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.execute("PRAGMA journal_mode=WAL;")  # Enables write-ahead logging
-        os.chmod(db_path, 0o777)  # Equivalent to `chmod 777 rms.db`
+        os.chmod(self.db_path, 0o777)  # Ensure the db file is writable
 
         self.cursor = self.conn.cursor()
         self.create_table()
@@ -50,6 +47,16 @@ class Model:
                     description TEXT
                 )
             """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS reservations (
+                reserve_number INTEGER PRIMARY KEY AUTOINCREMENT,
+                tables TEXT NOT NULL,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                date TEXT NOT NULL,
+                time TEXT NOT NULL
+            )
+        """)
         self.conn.commit()
 
     def check_user(self, username, password):
@@ -79,48 +86,7 @@ class Model:
                 ("Fried Rice", 2.5, "fried_rice.png"),
                 ("Coca Cola", 1.2, "coca_cola.png"),
                 ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
-                ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
-                ("Burger", 3.0, "burger.png"),
+                # More sample data...
             ]
             self.cursor.executemany("INSERT INTO menu (name, unit_price, image) VALUES (?, ?, ?)", sample_data)
 
@@ -134,7 +100,19 @@ class Model:
                     (4, "Private dining area"),
                     (5, "Bar counter seat"),
                 ]
-            self.cursor.executemany("INSERT INTO tables (table_number, description) VALUES (?, ?)", table_data)
+                self.cursor.executemany("INSERT INTO tables (table_number, description) VALUES (?, ?)", table_data)
+
+            # Check if reservation data exists
+            self.cursor.execute("SELECT COUNT(*) FROM reservations")
+            if self.cursor.fetchone()[0] == 0:
+                sample_reservations = [
+                    ("1, 2, 3", "Dara", "123456789", "2025-02-15", "18:30"),
+                    ("5", "Nita", "987654321", "2025-02-16", "19:00"),
+                    ("4", "Bora", "555123456", "2025-02-17", "20:15"),
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO reservations (tables, name, phone, date, time) VALUES (?, ?, ?, ?, ?)",
+                    sample_reservations)
 
             self.conn.commit()
 
@@ -156,7 +134,7 @@ class Model:
             os.makedirs("images")
 
         # Generate a unique image filename using UUID
-        unique_image_name = f"{uuid.uuid4().hex}.png"  # UUID will create a unique name for the image
+        unique_image_name = f"{uuid.uuid4().hex}.png"
 
         # Define the target path in the images folder
         target_path = os.path.join("images", unique_image_name)
@@ -170,7 +148,6 @@ class Model:
         self.conn.commit()
 
     def get_menu_item(self, menu_id):
-        # Fetch the menu item by menu_id from the database
         self.cursor.execute("SELECT name, unit_price, image FROM menu WHERE id = ?", (menu_id,))
         result = self.cursor.fetchone()
         if result:
@@ -183,7 +160,7 @@ class Model:
             os.makedirs("images")
 
         # Generate a unique image filename using UUID
-        unique_image_name = f"{uuid.uuid4().hex}.png"  # Generate unique name with .png extension
+        unique_image_name = f"{uuid.uuid4().hex}.png"
         target_path = os.path.join("images", unique_image_name)
 
         # If the image doesn't already exist in the images folder, copy it there
@@ -196,12 +173,8 @@ class Model:
         self.conn.commit()
 
     def get_tables(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT table_number, description FROM tables")
-        data = cursor.fetchall()
-        conn.close()
-        return data
+        self.cursor.execute("SELECT table_number, description FROM tables")
+        return self.cursor.fetchall()
 
     def delete_table(self, table_number):
         try:
@@ -212,19 +185,59 @@ class Model:
             self.conn.rollback()
 
     def update_table(self, table_number, new_description):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("UPDATE tables SET description = ? WHERE table_number = ?",
-                       (new_description, table_number))
-        conn.commit()
-        conn.close()
+        self.cursor.execute("UPDATE tables SET description = ? WHERE table_number = ?",
+                            (new_description, table_number))
+        self.conn.commit()
 
     def add_table(self, table_number, description):
-        """Add a new table to the database."""
         try:
-            # Insert new table data into the database
             self.cursor.execute("INSERT INTO tables (table_number, description) VALUES (?, ?)",
                                 (table_number, description))
-            self.conn.commit()  # Commit the changes to the database
+            self.conn.commit()
         except sqlite3.Error as e:
             print(f"Error inserting table: {e}")
+
+    # -------- Reservation Methods -------- #
+
+    def get_reservations(self):
+        self.cursor.execute("SELECT reserve_number, tables, name, phone, date, time FROM reservations")
+        return self.cursor.fetchall()
+
+    def add_reservation(self, tables, name, phone, date, time):
+        try:
+            self.cursor.execute("INSERT INTO reservations (tables, name, phone, date, time) VALUES (?, ?, ?, ?, ?)",
+                                (tables, name, phone, date, time))
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error inserting reservation: {e}")
+            return False
+
+    def update_reservation(self, reserve_number, tables, name, phone, date, time):
+        try:
+            self.cursor.execute("""
+                   UPDATE reservations 
+                   SET tables = ?, name = ?, phone = ?, date = ?, time = ? 
+                   WHERE reserve_number = ?
+               """, (tables, name, phone, date, time, reserve_number))
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error updating reservation: {e}")
+            return False
+
+    def delete_reservation(self, reserve_number):
+        try:
+            self.cursor.execute("DELETE FROM reservations WHERE reserve_number = ?", (reserve_number,))
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error deleting reservation: {e}")
+            return False
+
+    def close_connection(self):
+        """Close the connection properly."""
+        try:
+            self.conn.close()
+        except sqlite3.Error as e:
+            print(f"Error closing the connection: {e}")

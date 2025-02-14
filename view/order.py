@@ -80,7 +80,7 @@ class OrderView(QWidget):
         db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
         image_base_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/images"
 
-        with sqlite3.connect(db_path, check_same_thread=False, timeout=10) as conn:
+        with sqlite3.connect(db_path, check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, name, unit_price, image FROM menu")
             menu_items = cursor.fetchall()

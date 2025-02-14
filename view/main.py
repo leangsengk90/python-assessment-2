@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLa
 
 from view.menu import MenuView
 from view.order import OrderView
+from view.reservation import ReservationView
 from view.tables import TableView
 
 
@@ -26,7 +27,7 @@ class MainView(QMainWindow):
             "Order": OrderView(),
             "Menu": MenuView(),
             "Table": TableView(),
-            "Reservation": QLabel("Reservation Page"),
+            "Reservation": ReservationView(),
             "Bill": QLabel("Bill Page"),
             "Report": QLabel("Report Page"),
         }
