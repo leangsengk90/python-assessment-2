@@ -1,10 +1,8 @@
 import os
-
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QHBoxLayout, \
     QMessageBox, QDialog, QLineEdit, QFileDialog
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
-
 from model.model import Model
 
 class MenuView(QWidget):
@@ -65,13 +63,14 @@ class MenuView(QWidget):
 
             # Load Image with Smooth Scaling from the images folder
             image_label = QLabel()
-            image_path = os.path.join("images", image_filename)  # Get image path from 'images' folder
-            pixmap = QPixmap(image_path)
-            pixmap = pixmap.scaled(120, 140, Qt.AspectRatioMode.KeepAspectRatio,
-                                   Qt.TransformationMode.SmoothTransformation)  # Use smooth scaling
-            image_label.setPixmap(pixmap)
-            image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.table.setCellWidget(row_idx, 3, image_label)
+            image_path = self.get_image_path(image_filename)
+            pixmap = self.load_image(image_path)
+            if pixmap:
+                pixmap = pixmap.scaled(120, 140, Qt.AspectRatioMode.KeepAspectRatio,
+                                       Qt.TransformationMode.SmoothTransformation)  # Use smooth scaling
+                image_label.setPixmap(pixmap)
+                image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.table.setCellWidget(row_idx, 3, image_label)
 
             # Action Buttons
             action_layout = QHBoxLayout()
@@ -93,22 +92,38 @@ class MenuView(QWidget):
 
             self.table.setCellWidget(row_idx, 4, action_widget)
 
+    def get_image_path(self, image_filename):
+        """Convert relative image path to absolute path if needed."""
+        image_path = os.path.join("images", image_filename)  # Assuming images folder
+        if not os.path.isabs(image_path):  # If the path is not absolute
+            image_path = os.path.abspath(image_path)  # Convert to absolute path
+        return image_path
+
+    def load_image(self, image_path):
+        """Try loading image and handle errors."""
+        if not os.path.exists(image_path):
+            print(f"Error: Image file {image_path} not found.")
+            return None
+        return QPixmap(image_path)
+
     def update_item(self, menu_id):
-        # Open the Update Dialog and pass the current item data
+        """Open the Update Dialog and pass the current item data"""
         current_item = self.model.get_menu_item(menu_id)
         self.dialog = UpdateItemDialog(self, menu_id, current_item)
         self.dialog.show()
 
     def open_add_item_dialog(self):
+        """Open the Add Item Dialog"""
         self.dialog = AddItemDialog(self)
         self.dialog.show()
 
     def delete_item(self, menu_id):
+        """Delete the item from the menu"""
         confirm = QMessageBox.question(self, "Delete Item", "Are you sure you want to delete this item?",
                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if confirm == QMessageBox.StandardButton.Yes:
             self.model.delete_menu_item(menu_id)
-            self.load_data()
+            self.load_data()  # Reload the menu data
 
 class AddItemDialog(QDialog):
     def __init__(self, parent=None):
