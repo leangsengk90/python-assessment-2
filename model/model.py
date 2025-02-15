@@ -5,6 +5,7 @@ import uuid
 import bcrypt  # Import bcrypt for password hashing
 
 db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
+image_base_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/images"
 
 # Model: Handles database interactions
 class Model:
@@ -116,9 +117,17 @@ class Model:
 
             self.conn.commit()
 
+    # def get_menu_items(self):
+    #     conn = sqlite3.connect(self.db_path, check_same_thread=False)
+    #     conn.execute("PRAGMA journal_mode=WAL;")  # Enables write-ahead logging
+    #     cursor = conn.cursor()
+    #     cursor.execute("SELECT * FROM menu")
+    #     return self.cursor.fetchall()
+
     def get_menu_items(self):
-        self.cursor.execute("SELECT * FROM menu")
-        return self.cursor.fetchall()
+        self.cursor.execute("SELECT id, name, unit_price, image FROM menu")  # Query to get menu items
+        menu_items = self.cursor.fetchall()
+        return menu_items
 
     def delete_menu_item(self, menu_id):
         try:

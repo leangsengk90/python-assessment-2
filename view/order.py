@@ -1,74 +1,68 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QLineEdit,
-    QPushButton, QHBoxLayout, QLabel, QHeaderView, QSizePolicy, QSpacerItem, QDoubleSpinBox
+    QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QPushButton,
+    QHBoxLayout, QHeaderView, QSizePolicy, QSpacerItem, QDoubleSpinBox
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
-import sqlite3
 import os
 from functools import partial
+from model.model import Model  # Importing the MenuModel
 
+image_base_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/images"
 
 class OrderView(QWidget):
     def __init__(self):
         super().__init__()
+        self.menu_model = Model()
+        self.order_data = {}
+        self.setup_ui()
+        self.load_menu_data()
 
-        # Main Layout
+    def setup_ui(self):
         main_layout = QHBoxLayout(self)
 
-        # Left Layout (80%)
+        # Left Layout (Menu Table)
         self.left_layout = QVBoxLayout()
         self.table = QTableWidget()
         self.setup_menu_table()
         self.left_layout.addWidget(self.table)
         main_layout.addLayout(self.left_layout, 6)
 
-        # Right Layout (20%) - Order Summary
+        # Right Layout (Order Summary)
         self.right_layout = QVBoxLayout()
         self.order_summary_table = QTableWidget()
         self.setup_order_summary_table()
         self.right_layout.addWidget(QLabel("Order Summary"))
-
-        # Make sure the table takes more space
-        self.order_summary_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.right_layout.addWidget(self.order_summary_table)
 
-        # Subtotal, Tax, Discount, Grand Total
+        # Summary Labels
         self.subtotal_label = QLabel("Subtotal: $0.00")
         self.right_layout.addWidget(self.subtotal_label)
 
         self.tax_input = QDoubleSpinBox()
         self.tax_input.setPrefix("Tax (%): ")
-        self.tax_input.setValue(10.0)  # Default tax 10%
+        self.tax_input.setValue(10.0)
         self.tax_input.valueChanged.connect(self.update_totals)
         self.right_layout.addWidget(self.tax_input)
 
         self.discount_input = QDoubleSpinBox()
         self.discount_input.setPrefix("Discount (%): ")
-        self.discount_input.setValue(0.0)  # Default discount 0%
+        self.discount_input.setValue(0.0)
         self.discount_input.valueChanged.connect(self.update_totals)
         self.right_layout.addWidget(self.discount_input)
 
         self.grand_total_label = QLabel("Grand Total: $0.00")
         self.right_layout.addWidget(self.grand_total_label)
 
-        # Spacer to push table to the top
+        # Spacer
         self.right_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
-
-        # Adjust the stretch factors for better allocation of space
         main_layout.addLayout(self.right_layout, 4)
-        main_layout.setStretch(0, 6)  # Left layout (menu) takes 60% space
-        main_layout.setStretch(1, 4)  # Right layout (order summary) takes 40% space
-
-        self.order_data = {}
-        self.load_menu_data()
 
     def setup_menu_table(self):
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["ID", "Name", "Unit Price", "Image", "Action"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.verticalHeader().setDefaultSectionSize(120)
-        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def setup_order_summary_table(self):
         self.order_summary_table.setColumnCount(4)
@@ -77,14 +71,7 @@ class OrderView(QWidget):
         self.order_summary_table.verticalHeader().setDefaultSectionSize(50)
 
     def load_menu_data(self):
-        db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
-        image_base_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/images"
-
-        with sqlite3.connect(db_path, check_same_thread=False) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, name, unit_price, image FROM menu")
-            menu_items = cursor.fetchall()
-
+        menu_items = self.menu_model.get_menu_items()  # Get the latest data from the SQLite database
         self.table.setRowCount(len(menu_items))
 
         for row_idx, (id_, name, unit_price, image_name) in enumerate(menu_items):
@@ -111,11 +98,11 @@ class OrderView(QWidget):
             btn_layout = QHBoxLayout(btn_container)
             btn_layout.setContentsMargins(0, 0, 0, 0)
 
+            # Add and Remove buttons
             add_btn = QPushButton("Add")
-            remove_btn = QPushButton("Remove")
             add_btn.setStyleSheet("background-color: #4CAF50; color: white;")
-            remove_btn.setStyleSheet("background-color: #8B0000; color: white;")
-
+            remove_btn = QPushButton("Remove")
+            remove_btn.setStyleSheet("background-color: #e74c3c; color: white;")
             add_btn.clicked.connect(partial(self.add_to_order, id_, name, unit_price))
             remove_btn.clicked.connect(partial(self.remove_from_order, id_))
 
@@ -140,12 +127,10 @@ class OrderView(QWidget):
 
     def update_order_summary(self):
         self.order_summary_table.setRowCount(len(self.order_data))
-        subtotal = 0
+        subtotal = sum(data["quantity"] * data["unit_price"] for data in self.order_data.values())
 
         for row_idx, (menu_id, data) in enumerate(self.order_data.items()):
             total_price = data["quantity"] * data["unit_price"]
-            subtotal += total_price
-
             self.order_summary_table.setItem(row_idx, 0, QTableWidgetItem(data["name"]))
             self.order_summary_table.setItem(row_idx, 1, QTableWidgetItem(str(data["quantity"])))
             self.order_summary_table.setItem(row_idx, 2, QTableWidgetItem(f"${data['unit_price']:.2f}"))
@@ -162,8 +147,13 @@ class OrderView(QWidget):
         self.grand_total_label.setText(f"Grand Total: ${grand_total:.2f}")
 
     # Error when call it
-    # def refresh_menu_data(self):
-    #     try:
-    #         self.load_menu_data()  # Reload the menu data
-    #     except Exception as e:
-    #         print(f"Failed to refresh menu data: {e}")
+    def refresh_menu_data(self):
+        try:
+            print("Ordering init...")
+            # self.refresh_ui()
+            # self.table.setRowCount(0)  # Clear current table contents
+            self.load_menu_data()  # Reload menu data again
+            # self.update_order_summary()  # Optionally update the order summary
+
+        except Exception as e:
+            print(f"Failed to refresh menu data: {e}")

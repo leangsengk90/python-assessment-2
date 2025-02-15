@@ -78,8 +78,8 @@ class MenuView(QWidget):
             btn_delete = QPushButton("Delete")
 
             # Set colors for the buttons
-            btn_update.setStyleSheet("background-color: #FFC300; color: white; font-weight: bold;")
-            btn_delete.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+            btn_update.setStyleSheet("background-color: #3498db; color: white; font-weight: bold;")
+            btn_delete.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
 
             btn_update.clicked.connect(lambda _, id=menu_id: self.update_item(id))
             btn_delete.clicked.connect(lambda _, id=menu_id: self.delete_item(id))

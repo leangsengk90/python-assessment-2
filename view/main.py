@@ -65,7 +65,7 @@ class MainView(QMainWindow):
 
             # Error when call it
             # Check if the "Order" page is selected and refresh data
-            # if page_name == "Order":
-            #     order_view = self.pages.get("Order")
-            #     if order_view:
-            #         order_view.refresh_menu_data()  # Reload data from the database
+            if page_name == "Order":
+                order_view = self.pages.get("Order")
+                if order_view:
+                    order_view.refresh_menu_data()  # Reload data from the database
