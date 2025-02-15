@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QPushButton,
-    QHBoxLayout, QHeaderView, QSizePolicy, QSpacerItem, QDoubleSpinBox
+    QHBoxLayout, QHeaderView, QSizePolicy, QSpacerItem, QDoubleSpinBox, QComboBox, QMessageBox
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
@@ -15,8 +15,10 @@ class OrderView(QWidget):
         super().__init__()
         self.menu_model = Model()
         self.order_data = {}
+        self.selected_table = None  # Store the selected table number
         self.setup_ui()
         self.load_menu_data()
+        self.load_table_numbers()  # Load table numbers
 
     def setup_ui(self):
         main_layout = QHBoxLayout(self)
@@ -31,20 +33,28 @@ class OrderView(QWidget):
         # Right Layout (Order Summary)
         self.right_layout = QVBoxLayout()
 
-        # Clear Button at the Top Right of Order Summary
+        # Table Number Dropdown & Clear Button (Same Row)
+        table_layout = QHBoxLayout()
+
+        self.table_label = QLabel("Table Number:")
+        self.table_dropdown = QComboBox()
+        self.table_dropdown.currentIndexChanged.connect(self.on_table_selected)
+
         self.clear_button = QPushButton("Clear all")
         self.clear_button.setStyleSheet("background-color: #f39c12; color: white;")
         self.clear_button.clicked.connect(self.clear_order)
 
-        # Add the clear button to a horizontal layout to position it to the right
-        top_layout = QHBoxLayout()
-        top_layout.addStretch()  # Push the button to the right
-        top_layout.addWidget(self.clear_button)
-        self.right_layout.addLayout(top_layout)
+        table_layout.addWidget(self.table_label)
+        table_layout.addWidget(self.table_dropdown)
+        table_layout.addStretch()  # Pushes "Clear all" to the right
+        table_layout.addWidget(self.clear_button)
+
+        self.right_layout.addLayout(table_layout)  # Add the row to the right layout
 
         self.order_summary_table = QTableWidget()
         self.setup_order_summary_table()
         self.right_layout.addWidget(QLabel("Order Summary"))
+        self.order_summary_table.setFixedHeight(420)
         self.right_layout.addWidget(self.order_summary_table)
 
         # Summary Labels
@@ -66,7 +76,13 @@ class OrderView(QWidget):
         self.grand_total_label = QLabel("Grand Total: $0.00")
         self.right_layout.addWidget(self.grand_total_label)
 
-        # Spacer
+        # Create Order Button
+        self.create_order_button = QPushButton("Create Order")
+        self.create_order_button.setFixedHeight(50)  # Set height only
+        self.create_order_button.setStyleSheet("background-color: #3498db; color: white;")
+        self.create_order_button.clicked.connect(self.create_order)
+        self.right_layout.addWidget(self.create_order_button)
+
         self.right_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         main_layout.addLayout(self.right_layout, 4)
 
@@ -176,6 +192,7 @@ class OrderView(QWidget):
             # self.table.setRowCount(0)  # Clear current table contents
             self.load_menu_data()  # Reload menu data again
             # self.update_order_summary()  # Optionally update the order summary
+            self.load_table_numbers()
 
         except Exception as e:
             print(f"Failed to refresh menu data: {e}")
@@ -187,3 +204,59 @@ class OrderView(QWidget):
         self.grand_total_label.setText("Grand Total: $0.00")
         self.tax_input.setValue(10.0)  # Reset tax
         self.discount_input.setValue(0.0)  # Reset discount
+
+    def load_table_numbers(self):
+        """Fetch table numbers from the database and populate the dropdown."""
+        tables = self.menu_model.get_table_number()  # Assuming this returns a list of table numbers
+        self.table_dropdown.clear()
+        self.table_dropdown.addItem("Select Table")  # Default value
+
+        for table_number in tables:
+            self.table_dropdown.addItem(str(table_number))  # Only adding table number (no description)
+
+    def on_table_selected(self):
+        """Handle table selection from the dropdown."""
+        self.selected_table = self.table_dropdown.currentText()
+        print(f"Selected Table: {self.selected_table}")
+
+    # Order
+    def create_order(self):
+        """Create a new order and insert into the database."""
+        table_number = self.table_dropdown.currentText()
+
+        if table_number == "Select Table":
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Icon.Critical)  # Critical icon
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Please select a table.")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)  # Only OK button
+            msg_box.exec()  # Display the dialog
+            return  # Prevent further actions
+
+        if not self.order_data:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Icon.Critical)  # Critical icon
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Order is empty.")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)  # Only OK button
+            msg_box.exec()  # Display the dialog
+            return  # Prevent further actions
+
+        # Get tax and discount from inputs (you can replace these with actual input widgets)
+        tax = self.tax_input.value()  # Assuming a QDoubleSpinBox or similar widget for tax
+        discount = self.discount_input.value()  # Assuming a QDoubleSpinBox or similar widget for discount
+
+        try:
+            # Use the Model to insert each item into the orders table
+            for menu_id, data in self.order_data.items():
+                qty = data["quantity"]
+                # Insert order with tax and discount
+                self.menu_model.insert_order(table_number, menu_id, qty, tax, discount)
+
+            # Optionally, clear the order after submission
+            print(f"Order created successfully for Table {table_number}")
+            self.clear_order()  # Clear the order data after submission
+
+        except Exception as e:
+            print(f"Failed to create order: {e}")
+

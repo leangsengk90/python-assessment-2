@@ -55,6 +55,19 @@ class Model:
                 time TEXT NOT NULL
             )
         """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                table_number INTEGER NOT NULL,
+                order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                menu_id INTEGER NOT NULL,
+                qty INTEGER NOT NULL,
+                tax REAL DEFAULT 0.0,  
+                discount REAL DEFAULT 0.0, 
+                FOREIGN KEY (menu_id) REFERENCES menu(id)
+            );
+        """)
+
         self.conn.commit()
 
     def check_user(self, username, password):
@@ -178,9 +191,16 @@ class Model:
                             (name, unit_price, unique_image_name, menu_id))
         self.conn.commit()
 
+    # Tables
+    def get_table_number(self):
+        self.cursor.execute("SELECT table_number FROM tables")  # Only select the table_number
+        tables = [row[0] for row in self.cursor.fetchall()]
+        return tables
+
     def get_tables(self):
-        self.cursor.execute("SELECT table_number, description FROM tables")
-        return self.cursor.fetchall()
+        self.cursor.execute("SELECT table_number, description FROM tables")  # Only select the table_number
+        tables = self.cursor.fetchall()
+        return tables
 
     def delete_table(self, table_number):
         try:
@@ -247,3 +267,17 @@ class Model:
             self.conn.close()
         except sqlite3.Error as e:
             print(f"Error closing the connection: {e}")
+
+    # Order
+    def insert_order(self, table_number, menu_id, qty, tax, discount):
+        """Insert order data into the database, including tax and discount."""
+        try:
+            self.cursor.execute("""
+                INSERT INTO orders (table_number, menu_id, qty, tax, discount)
+                VALUES (?, ?, ?, ?, ?)
+            """, (table_number, menu_id, qty, tax, discount))
+            self.conn.commit()
+            print(
+                f"Order for table {table_number}, menu_id {menu_id}, qty {qty}, tax {tax}, discount {discount} inserted.")
+        except Exception as e:
+            print(f"Failed to insert order: {e}")
