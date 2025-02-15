@@ -30,6 +30,18 @@ class OrderView(QWidget):
 
         # Right Layout (Order Summary)
         self.right_layout = QVBoxLayout()
+
+        # Clear Button at the Top Right of Order Summary
+        self.clear_button = QPushButton("Clear all")
+        self.clear_button.setStyleSheet("background-color: #f39c12; color: white;")
+        self.clear_button.clicked.connect(self.clear_order)
+
+        # Add the clear button to a horizontal layout to position it to the right
+        top_layout = QHBoxLayout()
+        top_layout.addStretch()  # Push the button to the right
+        top_layout.addWidget(self.clear_button)
+        self.right_layout.addLayout(top_layout)
+
         self.order_summary_table = QTableWidget()
         self.setup_order_summary_table()
         self.right_layout.addWidget(QLabel("Order Summary"))
@@ -131,10 +143,20 @@ class OrderView(QWidget):
 
         for row_idx, (menu_id, data) in enumerate(self.order_data.items()):
             total_price = data["quantity"] * data["unit_price"]
-            self.order_summary_table.setItem(row_idx, 0, QTableWidgetItem(data["name"]))
-            self.order_summary_table.setItem(row_idx, 1, QTableWidgetItem(str(data["quantity"])))
-            self.order_summary_table.setItem(row_idx, 2, QTableWidgetItem(f"${data['unit_price']:.2f}"))
-            self.order_summary_table.setItem(row_idx, 3, QTableWidgetItem(f"${total_price:.2f}"))
+
+            name_item = QTableWidgetItem(data["name"])
+            quantity_item = QTableWidgetItem(str(data["quantity"]))
+            unit_price_item = QTableWidgetItem(f"${data['unit_price']:.2f}")
+            total_price_item = QTableWidgetItem(f"${total_price:.2f}")
+
+            # Set item flags to disable editing
+            for item in [name_item, quantity_item, unit_price_item, total_price_item]:
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+
+            self.order_summary_table.setItem(row_idx, 0, name_item)
+            self.order_summary_table.setItem(row_idx, 1, quantity_item)
+            self.order_summary_table.setItem(row_idx, 2, unit_price_item)
+            self.order_summary_table.setItem(row_idx, 3, total_price_item)
 
         self.subtotal_label.setText(f"Subtotal: ${subtotal:.2f}")
         self.update_totals()
@@ -157,3 +179,11 @@ class OrderView(QWidget):
 
         except Exception as e:
             print(f"Failed to refresh menu data: {e}")
+
+    def clear_order(self):
+        self.order_data.clear()  # Clear the order data
+        self.update_order_summary()  # Update the order summary table
+        self.subtotal_label.setText("Subtotal: $0.00")
+        self.grand_total_label.setText("Grand Total: $0.00")
+        self.tax_input.setValue(10.0)  # Reset tax
+        self.discount_input.setValue(0.0)  # Reset discount
