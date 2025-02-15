@@ -13,14 +13,16 @@ class Model:
         self.db_path = db_path
 
         # Remove the database file if it exists
-        if os.path.exists(self.db_path):
-            os.remove(self.db_path)
-            print("rms.db has been removed.")
+        # if os.path.exists(self.db_path):
+        #     os.remove(self.db_path)
+        #     print("rms.db has been removed.")
 
         # Open the connection and set the cursor once
-        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        # self.conn = sqlite3.connect(self.db_path)
+        # self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        self.conn = sqlite3.connect('rms.db', check_same_thread=False, timeout=10.0, isolation_level=None)
         self.conn.execute("PRAGMA journal_mode=WAL;")  # Enables write-ahead logging
-        os.chmod(self.db_path, 0o777)  # Ensure the db file is writable
+        # os.chmod(self.db_path, 0o777)  # Ensure the db file is writable
 
         self.cursor = self.conn.cursor()
         self.create_table()
