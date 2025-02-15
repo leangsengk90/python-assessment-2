@@ -253,6 +253,13 @@ class OrderView(QWidget):
                 # Insert order with tax and discount
                 self.menu_model.insert_order(table_number, menu_id, qty, tax, discount)
 
+            # Success message after order is created
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Icon.Information)  # Information icon
+            msg_box.setWindowTitle("Success")
+            msg_box.setText(f"Order created successfully for Table {table_number}.")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)  # Only OK button
+            msg_box.exec()  # Display the dialog
             # Optionally, clear the order after submission
             print(f"Order created successfully for Table {table_number}")
             self.clear_order()  # Clear the order data after submission
