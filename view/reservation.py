@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QMessageBox, \
-    QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit
+    QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit, QHeaderView
 from PyQt6.QtCore import QDate, QTime
 from model.model import Model
 
@@ -36,6 +36,9 @@ class ReservationView(QWidget):
         # Table Widget
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
+
+        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # self.table_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
 
         self.load_reservation_data()
 

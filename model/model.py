@@ -59,7 +59,7 @@ class Model:
             CREATE TABLE IF NOT EXISTS orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 table_number INTEGER NOT NULL,
-                order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                order_date DATETIME DEFAULT (datetime('now', 'localtime')),
                 menu_id INTEGER NOT NULL,
                 qty INTEGER NOT NULL,
                 tax REAL DEFAULT 0.0,  

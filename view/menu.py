@@ -1,6 +1,6 @@
 import os
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QHBoxLayout, \
-    QMessageBox, QDialog, QLineEdit, QFileDialog
+    QMessageBox, QDialog, QLineEdit, QFileDialog, QHeaderView
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
 from model.model import Model
@@ -33,6 +33,9 @@ class MenuView(QWidget):
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["MenuID", "Name", "Unit Price", "Image", "Action"])
         self.load_data()
+
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
         layout.addWidget(self.table)
         self.setLayout(layout)

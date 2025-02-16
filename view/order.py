@@ -84,6 +84,10 @@ class OrderView(QWidget):
         self.right_layout.addWidget(self.create_order_button)
 
         self.right_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+
         main_layout.addLayout(self.right_layout, 4)
 
     def setup_menu_table(self):

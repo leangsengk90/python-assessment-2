@@ -32,6 +32,9 @@ class InvoiceView(QWidget):
         # self.refresh_button.clicked.connect(self.load_invoice_data)
         # main_layout.addWidget(self.refresh_button)
 
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+
         self.setLayout(main_layout)
 
     def load_invoice_data(self):
