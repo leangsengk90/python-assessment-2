@@ -184,7 +184,7 @@ class OrderView(QWidget):
         grand_total = subtotal + tax - discount
         self.grand_total_label.setText(f"Grand Total: ${grand_total:.2f}")
 
-    # Error when call it
+    # work when call it
     def refresh_menu_data(self):
         try:
             print("Ordering init...")

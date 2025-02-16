@@ -3,6 +3,7 @@ from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, \
     QMessageBox, QToolBar, QStackedWidget
 
+from view.invoice import InvoiceView
 from view.menu import MenuView
 from view.order import OrderView
 from view.reservation import ReservationView
@@ -28,7 +29,7 @@ class MainView(QMainWindow):
             "Menu": MenuView(),
             "Table": TableView(),
             "Reservation": ReservationView(),
-            "Bill": QLabel("Bill Page"),
+            "Invoice": InvoiceView(),
             "Report": QLabel("Report Page"),
         }
 
@@ -40,7 +41,7 @@ class MainView(QMainWindow):
             "Menu": "../icons/menu.png",
             "Table": "../icons/table.png",
             "Reservation": "../icons/reservation.png",
-            "Bill": "../icons/bill.png",
+            "Invoice": "../icons/invoice.png",
             "Report": "../icons/report.png",
         }
 
@@ -69,3 +70,8 @@ class MainView(QMainWindow):
                 order_view = self.pages.get("Order")
                 if order_view:
                     order_view.refresh_menu_data()  # Reload data from the database
+
+            if page_name == "Invoice":
+                invoice_view = self.pages.get("Invoice")
+                if invoice_view:
+                    invoice_view.refresh_invoice_data()  # Reload data from the database

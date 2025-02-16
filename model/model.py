@@ -63,7 +63,8 @@ class Model:
                 menu_id INTEGER NOT NULL,
                 qty INTEGER NOT NULL,
                 tax REAL DEFAULT 0.0,  
-                discount REAL DEFAULT 0.0, 
+                discount REAL DEFAULT 0.0,
+                is_enabled BOOLEAN DEFAULT 1,  
                 FOREIGN KEY (menu_id) REFERENCES menu(id)
             );
         """)
@@ -281,3 +282,36 @@ class Model:
                 f"Order for table {table_number}, menu_id {menu_id}, qty {qty}, tax {tax}, discount {discount} inserted.")
         except Exception as e:
             print(f"Failed to insert order: {e}")
+
+
+    # Invoice
+
+    def disable_invoice(self, order_id):
+        query = "UPDATE orders SET is_enabled = 0 WHERE id = ?"
+        self.cursor.execute(query, (order_id,))
+        self.conn.commit()
+
+    def get_invoices(self):
+        query = """
+            SELECT o.id, o.table_number, o.order_date, m.name, m.unit_price, o.qty, o.tax, o.discount
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            WHERE o.is_enabled = 1
+        """
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
+    def get_menu_names(self):
+        # Get all menu names from the database
+        query = "SELECT name FROM menu"
+        self.cursor.execute(query)
+        return [row[0] for row in self.cursor.fetchall()]
+
+    def update_invoice(self, updated_data):
+        query = """
+            UPDATE orders
+            SET table_number = ?, menu_id = (SELECT id FROM menu WHERE name = ?), qty = ?, tax = ?, discount = ?
+            WHERE id = ?
+        """
+        self.cursor.execute(query, updated_data)
+        self.conn.commit()
