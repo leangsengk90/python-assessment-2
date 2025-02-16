@@ -35,10 +35,8 @@ class TableView(QWidget):
 
         # Table Widget
         self.table_widget = QTableWidget()
-        self.layout.addWidget(self.table_widget)
 
-        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.layout.addWidget(self.table_widget)
 
         self.load_table_data()
 
@@ -55,6 +53,8 @@ class TableView(QWidget):
 
         self.table_widget.verticalHeader().setDefaultSectionSize(40)  # Increase row height
         self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)  # Make table uneditable
+        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
 
         for row_index, (table_number, description) in enumerate(data):
             self.table_widget.insertRow(row_index)

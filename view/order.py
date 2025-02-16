@@ -85,16 +85,15 @@ class OrderView(QWidget):
 
         self.right_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-
         main_layout.addLayout(self.right_layout, 4)
 
     def setup_menu_table(self):
         self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["ID", "Name", "Unit Price", "Image", "Action"])
+        self.table.setHorizontalHeaderLabels(["MenuID", "Name", "Unit Price", "Image", "Action"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.table.verticalHeader().setDefaultSectionSize(120)
+
 
     def setup_order_summary_table(self):
         self.order_summary_table.setColumnCount(4)

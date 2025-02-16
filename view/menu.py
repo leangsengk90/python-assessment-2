@@ -32,10 +32,11 @@ class MenuView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["MenuID", "Name", "Unit Price", "Image", "Action"])
-        self.load_data()
 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+
+        self.load_data()
 
         layout.addWidget(self.table)
         self.setLayout(layout)

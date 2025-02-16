@@ -291,15 +291,15 @@ class Model:
         self.cursor.execute(query, (order_id,))
         self.conn.commit()
 
-    def get_invoices(self):
-        query = """
-            SELECT o.id, o.table_number, o.order_date, m.name, m.unit_price, o.qty, o.tax, o.discount
-            FROM orders o
-            JOIN menu m ON o.menu_id = m.id
-            WHERE o.is_enabled = 1
-        """
-        self.cursor.execute(query)
-        return self.cursor.fetchall()
+    # def get_invoices(self):
+    #     query = """
+    #         SELECT o.id, o.table_number, o.order_date, m.name, m.unit_price, o.qty, o.tax, o.discount
+    #         FROM orders o
+    #         JOIN menu m ON o.menu_id = m.id
+    #         WHERE o.is_enabled = 1
+    #     """
+    #     self.cursor.execute(query)
+    #     return self.cursor.fetchall()
 
     def get_menu_names(self):
         # Get all menu names from the database
@@ -315,3 +315,26 @@ class Model:
         """
         self.cursor.execute(query, updated_data)
         self.conn.commit()
+
+    def get_invoices(self, table_number=None):
+        """Fetch invoices, optionally filtered by table number."""
+        query = """
+            SELECT o.id, o.table_number, o.order_date, m.name, m.unit_price, o.qty, o.tax, o.discount
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            WHERE o.is_enabled = 1
+        """
+        params = []
+
+        if table_number:
+            query += " AND o.table_number = ?"
+            params.append(table_number)
+
+        self.cursor.execute(query, params)
+        return self.cursor.fetchall()
+
+    def get_table_numbers(self):
+        """Fetch unique table numbers from the orders table."""
+        query = "SELECT DISTINCT table_number FROM orders ORDER BY table_number"
+        self.cursor.execute(query)
+        return [row[0] for row in self.cursor.fetchall()]

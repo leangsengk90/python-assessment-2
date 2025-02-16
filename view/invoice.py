@@ -13,11 +13,23 @@ class InvoiceView(QWidget):
         super().__init__()
         self.model = Model()  # Use the model to fetch data
         self.setup_ui()
-        self.load_invoice_data()
+        self.load_table_numbers()  # Load available table numbers
+        self.load_invoice_data()  # Load invoices initially
 
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
 
+        # Row for table number dropdown
+        filter_layout = QHBoxLayout()
+        filter_layout.addWidget(QLabel("Table Number:"))
+
+        self.table_number_dropdown = QComboBox()
+        self.table_number_dropdown.currentIndexChanged.connect(self.load_invoice_data)  # Reload on selection change
+        filter_layout.addWidget(self.table_number_dropdown)
+
+        main_layout.addLayout(filter_layout)
+
+        # Table widget for displaying invoices
         self.table = QTableWidget()
         self.table.setColumnCount(10)
         self.table.setHorizontalHeaderLabels([
@@ -33,27 +45,55 @@ class InvoiceView(QWidget):
         # main_layout.addWidget(self.refresh_button)
 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
+
 
         self.setLayout(main_layout)
 
-    def load_invoice_data(self):
+    def load_table_numbers(self):
+        """Load available table numbers from the 'tables' database into the dropdown."""
         try:
-            invoices = self.model.get_invoices()  # Fetch invoices where is_enabled = 1
+            table_numbers = self.model.get_table_numbers()
+            self.table_number_dropdown.addItem("All", None)  # Default: Show all invoices
+            for table_number in table_numbers:
+                self.table_number_dropdown.addItem(str(table_number), table_number)
+        except Exception as e:
+            print(f"Failed to load table numbers: {e}")
+
+    def load_invoice_data(self):
+        """Fetch and display invoices based on the selected table number."""
+        try:
+            selected_table = self.table_number_dropdown.currentData()  # Get selected table number
+            invoices = self.model.get_invoices(selected_table)  # Pass selected table for filtering
             self.table.setRowCount(len(invoices))
+
             for row_idx, (order_id, table_number, order_date, menu_name, unit_price, qty, tax, discount) in enumerate(
                     invoices):
                 total = (unit_price * qty) + ((tax / 100) * unit_price * qty) - ((discount / 100) * unit_price * qty)
-                self.table.setItem(row_idx, 0, QTableWidgetItem(str(order_id)))
-                self.table.setItem(row_idx, 1, QTableWidgetItem(str(table_number)))
-                self.table.setItem(row_idx, 2, QTableWidgetItem(str(order_date)))
-                self.table.setItem(row_idx, 3, QTableWidgetItem(menu_name))
-                self.table.setItem(row_idx, 4, QTableWidgetItem(f"${unit_price:.2f}"))
-                self.table.setItem(row_idx, 5, QTableWidgetItem(str(qty)))
-                self.table.setItem(row_idx, 6, QTableWidgetItem(f"{tax:.2f}"))
-                self.table.setItem(row_idx, 7, QTableWidgetItem(f"{discount:.2f}"))
-                self.table.setItem(row_idx, 8, QTableWidgetItem(f"${total:.2f}"))
 
+                # Create table items and disable editing
+                items = [
+                    QTableWidgetItem(str(order_id)),
+                    QTableWidgetItem(str(table_number)),
+                    QTableWidgetItem(str(order_date)),
+                    QTableWidgetItem(menu_name),
+                    QTableWidgetItem(f"${unit_price:.2f}"),
+                    QTableWidgetItem(str(qty)),
+                    QTableWidgetItem(f"{tax:.2f}"),
+                    QTableWidgetItem(f"{discount:.2f}"),
+                    QTableWidgetItem(f"${total:.2f}")
+                ]
+
+                for item in items:
+                    item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)  # Disable editing
+
+                for col_idx, item in enumerate(items):
+                    self.table.setItem(row_idx, col_idx, item)
+
+                # Create action buttons (Update & Delete)
                 action_widget = QWidget()
                 action_layout = QHBoxLayout(action_widget)
                 action_layout.setContentsMargins(0, 0, 0, 0)
@@ -64,15 +104,17 @@ class InvoiceView(QWidget):
 
                 delete_button = QPushButton("Delete")
                 delete_button.setStyleSheet("background-color: #e74c3c; color: white;")
-                delete_button.clicked.connect(partial(self.confirm_delete, order_id))  # Confirm before delete
+                delete_button.clicked.connect(partial(self.confirm_delete, order_id))
 
                 action_layout.addWidget(update_button)
                 action_layout.addWidget(delete_button)
                 action_widget.setLayout(action_layout)
 
                 self.table.setCellWidget(row_idx, 9, action_widget)
+
         except Exception as e:
             print(f"Failed to load invoices: {e}")
+
 
     def confirm_delete(self, order_id):
         # Show a confirmation dialog before deletion

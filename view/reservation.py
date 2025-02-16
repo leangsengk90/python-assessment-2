@@ -36,10 +36,6 @@ class ReservationView(QWidget):
         # Table Widget
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
-
-        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-
         self.load_reservation_data()
 
     def load_reservation_data(self):
@@ -59,6 +55,8 @@ class ReservationView(QWidget):
 
         self.table_widget.verticalHeader().setDefaultSectionSize(40)  # Increase row height
         self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)  # Make table uneditable
+        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
 
         for row_index, row_data in enumerate(data):
             reserve_number, tables, name, phone, date, time = row_data[:6]  # Unpack only the first 6 values
