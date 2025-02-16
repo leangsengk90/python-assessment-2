@@ -334,7 +334,8 @@ class Model:
         return self.cursor.fetchall()
 
     def get_table_numbers(self):
-        """Fetch unique table numbers from the orders table."""
-        query = "SELECT DISTINCT table_number FROM orders ORDER BY table_number"
+        """Fetch unique table numbers from the orders table where is_enabled = 1."""
+        query = "SELECT DISTINCT table_number FROM orders WHERE is_enabled = 1 ORDER BY table_number"
         self.cursor.execute(query)
         return [row[0] for row in self.cursor.fetchall()]
+

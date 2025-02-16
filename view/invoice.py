@@ -21,11 +21,17 @@ class InvoiceView(QWidget):
 
         # Row for table number dropdown
         filter_layout = QHBoxLayout()
-        filter_layout.addWidget(QLabel("Table Number:"))
+
+        table_label = QLabel("Table Number:")
+        table_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)  # Prevents stretching
+        filter_layout.addWidget(table_label)
 
         self.table_number_dropdown = QComboBox()
-        self.table_number_dropdown.currentIndexChanged.connect(self.load_invoice_data)  # Reload on selection change
+        self.table_number_dropdown.setFixedWidth(200)
+        self.table_number_dropdown.currentIndexChanged.connect(self.load_invoice_data)
+
         filter_layout.addWidget(self.table_number_dropdown)
+        filter_layout.addStretch()  # Push everything to the left
 
         main_layout.addLayout(filter_layout)
 
@@ -54,8 +60,9 @@ class InvoiceView(QWidget):
         self.setLayout(main_layout)
 
     def load_table_numbers(self):
-        """Load available table numbers from the 'tables' database into the dropdown."""
+        """Load available table numbers from the 'orders' database into the dropdown."""
         try:
+            self.table_number_dropdown.clear()  # Clear existing items first
             table_numbers = self.model.get_table_numbers()
             self.table_number_dropdown.addItem("All", None)  # Default: Show all invoices
             for table_number in table_numbers:
@@ -129,6 +136,7 @@ class InvoiceView(QWidget):
         try:
             self.model.disable_invoice(order_id)
             self.load_invoice_data()  # Refresh table after deletion
+            self.load_table_numbers()
         except Exception as e:
             print(f"Failed to delete invoice: {e}")
 
@@ -142,6 +150,7 @@ class InvoiceView(QWidget):
         try:
             print("Refresh Invoice...")
             self.load_invoice_data()
+            self.load_table_numbers()
 
         except Exception as e:
             print(f"Failed to refresh invoice data: {e}")
@@ -219,6 +228,7 @@ class UpdateDialog(QDialog):
 
         # Refresh the data in the parent (InvoiceView) and close the dialog
         self.parent().load_invoice_data()
+        self.parent().load_table_numbers()
 
         # Close the dialog after saving
         self.accept()
