@@ -65,8 +65,18 @@ class Model:
                 tax REAL DEFAULT 0.0,  
                 discount REAL DEFAULT 0.0,
                 is_enabled BOOLEAN DEFAULT 1,  
+                invoice_id INTEGER,
                 FOREIGN KEY (menu_id) REFERENCES menu(id),
-                FOREIGN KEY (table_number) REFERENCES tables(table_number)
+                FOREIGN KEY (table_number) REFERENCES tables(table_number),
+                FOREIGN KEY (invoice_id) REFERENCES invoices(id)
+            );
+        """)
+
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS invoices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_date DATETIME DEFAULT (datetime('now', 'localtime')),
+                is_enabled BOOLEAN DEFAULT 1
             );
         """)
 
@@ -126,6 +136,21 @@ class Model:
                 self.cursor.executemany(
                     "INSERT INTO reservations (tables, name, phone, date, time) VALUES (?, ?, ?, ?, ?)",
                     sample_reservations)
+
+            # Check if invoice status data exists
+            self.cursor.execute("SELECT COUNT(*) FROM invoices")
+            if self.cursor.fetchone()[0] == 0:
+                sample_invoices = [
+                    ("2025-02-18 12:00:00", 1),  # Invoice is enabled
+                    ("2025-02-18 12:15:00", 1),  # Invoice is disabled
+                    ("2025-02-18 12:30:00", 1),  # Invoice is enabled
+                    ("2025-02-18 12:45:00", 1),  # Invoice is enabled
+                    ("2025-02-18 13:00:00", 1),  # Invoice is disabled
+                ]
+                self.cursor.executemany(
+                    "INSERT INTO invoices (created_date, is_enabled) VALUES (?, ?)",
+                    sample_invoices
+                )
 
             self.conn.commit()
 
@@ -349,3 +374,79 @@ class Model:
         except Exception as e:
             print(f"Failed to fetch valid table numbers: {e}")
             return []
+
+    def get_last_invoice_id(self):
+        """Fetch the last inserted invoice ID from the database."""
+        try:
+            query = "SELECT MAX(id) FROM invoices"
+            self.cursor.execute(query)  # Execute the query
+            result = self.cursor.fetchone()  # Fetch one row from the result
+            if result[0] is None:  # No invoices exist
+                return 1
+            else:
+                return result[0] + 1  # Increment the last invoice ID
+        except Exception as e:
+            print(f"Failed to fetch the last invoice ID: {e}")
+            return 1  # Default to 1 if something goes wrong
+
+    def insert_new_invoice(self, invoice_datetime):
+        """Insert a new invoice record into the invoices table with a provided datetime."""
+        try:
+            # Insert the new invoice record with the provided datetime
+            self.cursor.execute(
+                "INSERT INTO invoices (created_date, is_enabled) VALUES (?, ?)",
+                (invoice_datetime, True)  # Pass the provided datetime and True for is_enabled
+            )
+            self.conn.commit()  # Commit the transaction
+        except Exception as e:
+            print(f"Failed to insert new invoice: {e}")
+            return None
+
+    def update_order_invoice(self, table_number, invoice_id):
+        """Update the order to associate it with an invoice."""
+        try:
+            # Update the orders table where table_number is matched and is_enabled is true
+            self.cursor.execute(
+                """
+                UPDATE orders
+                SET invoice_id = ?
+                WHERE table_number = ? AND is_enabled = 1
+                """,
+                (invoice_id, table_number)
+            )
+            self.conn.commit()  # Commit the transaction
+
+            # Check how many rows were affected
+            rows_affected = self.cursor.rowcount
+            if rows_affected > 0:
+                print(
+                    f"Successfully updated {rows_affected} order(s) for table {table_number} with invoice {invoice_id}.")
+            else:
+                print(f"No active orders found for table {table_number}.")
+
+        except Exception as e:
+            print(f"Failed to update order invoice: {e}")
+
+    def update_order_status_by_invoice(self, invoice_id):
+        """Update the status of orders to 'disabled' (is_enabled = 0) based on invoice ID."""
+        try:
+            # Update the orders table where invoice matches
+            self.cursor.execute(
+                """
+                UPDATE orders
+                SET is_enabled = 0
+                WHERE invoice_id = ?
+                """,
+                (invoice_id,)
+            )
+            self.conn.commit()  # Commit the transaction
+
+            # Check how many rows were affected
+            rows_affected = self.cursor.rowcount
+            if rows_affected > 0:
+                print(f"Successfully updated {rows_affected} order(s) with invoice {invoice_id} to disabled.")
+            else:
+                print(f"No orders found with invoice {invoice_id}.")
+
+        except Exception as e:
+            print(f"Failed to update order status: {e}")

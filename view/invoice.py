@@ -200,6 +200,9 @@ class InvoiceView(QWidget):
     def generate_invoice_pdf(self):
         """Generate the invoice as a PDF and view it."""
         try:
+            # Get the latest invoice ID and increment it
+            invoice_id = self.model.get_last_invoice_id()
+
             # Set up the PDF file with custom page size (360x600 points)
             pdf_filename = "invoice.pdf"
             custom_size = (360, 600)  # Custom width and height in points
@@ -207,8 +210,13 @@ class InvoiceView(QWidget):
 
             # Get the selected table number
             selected_table = self.table_number_dropdown.currentData()
-            invoice_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # Check if the table number is None or not selected
+            if selected_table is None:
+                # Show an alert if no table number is selected
+                QMessageBox.warning(self, "Error", "Please select a table number before generating the invoice.")
+                return  # Exit the method if no table number is selected
 
+            invoice_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             # Adjusted positions to fit the custom size
             left_margin = 30  # Reduced left margin
@@ -223,7 +231,7 @@ class InvoiceView(QWidget):
             c.setFont("Helvetica-Bold", 10)
             c.drawString(left_margin, y_pos2, f"Table Number: {selected_table}")
             c.drawString(left_margin, y_pos2 - 20, f"Date: {invoice_date}")
-            c.drawString(left_margin, y_pos2 - 40, f"Invoice: 1")
+            c.drawString(left_margin, y_pos2 - 40, f"Invoice: {invoice_id}")
 
             y_pos3 = y_pos2 - 80
             # Add a table header without table_number, order_id, and order_date
@@ -285,8 +293,15 @@ class InvoiceView(QWidget):
             # Save the PDF
             c.save()
 
-            # Display success message
-            # QMessageBox.information(self, "Success", f"Invoice PDF generated: {pdf_filename}")
+            # Update data in DB
+            self.model.insert_new_invoice(invoice_date)
+
+            self.model.update_order_invoice(selected_table, invoice_id)
+
+            self.model.update_order_status_by_invoice(invoice_id)
+
+            self.load_invoice_data()
+            self.load_table_numbers()
 
             # Open the generated PDF using the default system PDF viewer
             if os.name == 'nt':  # Windows
