@@ -209,6 +209,7 @@ class InvoiceView(QWidget):
             selected_table = self.table_number_dropdown.currentData()
             invoice_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+
             # Adjusted positions to fit the custom size
             left_margin = 30  # Reduced left margin
             column_width = 80  # Decreased column width to fit better
@@ -311,14 +312,22 @@ class UpdateDialog(QDialog):
 
         form_layout = QFormLayout()
 
-        # Table Number Input
+        # Fetch valid table numbers from the model
+        valid_table_numbers = self.model.get_valid_table_numbers()  # Ensure this method exists
+
+        # Table Number Input (Restricted to valid numbers)
         self.table_number_input = QSpinBox()
-        self.table_number_input.setValue(self.invoice_data[1])  # Set initial value
+        if valid_table_numbers:
+            min_table = min(valid_table_numbers)
+            max_table = max(valid_table_numbers)
+            self.table_number_input.setRange(min_table, max_table)  # Restrict to valid table numbers
+            self.table_number_input.setValue(self.invoice_data[1])  # Set initial value
+
         form_layout.addRow("Table Number:", self.table_number_input)
 
         # Menu Name Input (ComboBox with existing menu names)
         self.menu_name_input = QComboBox()
-        menu_names = self.model.get_menu_names()  # This method should return a list of menu names
+        menu_names = self.model.get_menu_names()  # Ensure this method exists
         self.menu_name_input.addItems(menu_names)
         self.menu_name_input.setCurrentText(self.invoice_data[3])  # Set initial value
         form_layout.addRow("Menu Name:", self.menu_name_input)

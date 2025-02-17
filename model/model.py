@@ -65,7 +65,8 @@ class Model:
                 tax REAL DEFAULT 0.0,  
                 discount REAL DEFAULT 0.0,
                 is_enabled BOOLEAN DEFAULT 1,  
-                FOREIGN KEY (menu_id) REFERENCES menu(id)
+                FOREIGN KEY (menu_id) REFERENCES menu(id),
+                FOREIGN KEY (table_number) REFERENCES tables(table_number)
             );
         """)
 
@@ -339,3 +340,12 @@ class Model:
         self.cursor.execute(query)
         return [row[0] for row in self.cursor.fetchall()]
 
+    def get_valid_table_numbers(self):
+        """Fetch available table numbers from the tables table."""
+        try:
+            query = "SELECT DISTINCT table_number FROM tables ORDER BY table_number"
+            self.cursor.execute(query)
+            return [row[0] for row in self.cursor.fetchall()]
+        except Exception as e:
+            print(f"Failed to fetch valid table numbers: {e}")
+            return []
