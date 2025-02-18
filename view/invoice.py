@@ -50,7 +50,7 @@ class InvoiceView(QWidget):
             "Actions"
         ])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        main_layout.addWidget(QLabel("Invoice Records"))
+        main_layout.addWidget(QLabel("Order Records"))
         main_layout.addWidget(self.table)
 
         # self.refresh_button = QPushButton("Refresh")

@@ -8,6 +8,7 @@ from view.menu import MenuView
 from view.order import OrderView
 from view.reservation import ReservationView
 from view.tables import TableView
+from view.report import ReportView
 
 
 class MainView(QMainWindow):
@@ -30,7 +31,7 @@ class MainView(QMainWindow):
             "Table": TableView(),
             "Reservation": ReservationView(),
             "Invoice": InvoiceView(),
-            "Report": QLabel("Report Page"),
+            "Report": ReportView(),
         }
 
         for key, widget in self.pages.items():
@@ -75,3 +76,8 @@ class MainView(QMainWindow):
                 invoice_view = self.pages.get("Invoice")
                 if invoice_view:
                     invoice_view.refresh_invoice_data()  # Reload data from the database
+
+            if page_name == "Report":
+                report_view = self.pages.get("Report")
+                if report_view:
+                    report_view.refresh_report_data()  # Reload data from the database

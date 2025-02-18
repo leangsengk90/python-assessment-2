@@ -138,19 +138,19 @@ class Model:
                     sample_reservations)
 
             # Check if invoice status data exists
-            self.cursor.execute("SELECT COUNT(*) FROM invoices")
-            if self.cursor.fetchone()[0] == 0:
-                sample_invoices = [
-                    ("2025-02-18 12:00:00", 1),  # Invoice is enabled
-                    ("2025-02-18 12:15:00", 1),  # Invoice is disabled
-                    ("2025-02-18 12:30:00", 1),  # Invoice is enabled
-                    ("2025-02-18 12:45:00", 1),  # Invoice is enabled
-                    ("2025-02-18 13:00:00", 1),  # Invoice is disabled
-                ]
-                self.cursor.executemany(
-                    "INSERT INTO invoices (created_date, is_enabled) VALUES (?, ?)",
-                    sample_invoices
-                )
+            # self.cursor.execute("SELECT COUNT(*) FROM invoices")
+            # if self.cursor.fetchone()[0] == 0:
+            #     sample_invoices = [
+            #         ("2025-02-18 12:00:00", 1),  # Invoice is enabled
+            #         ("2025-02-18 12:15:00", 1),  # Invoice is disabled
+            #         ("2025-02-18 12:30:00", 1),  # Invoice is enabled
+            #         ("2025-02-18 12:45:00", 1),  # Invoice is enabled
+            #         ("2025-02-18 13:00:00", 1),  # Invoice is disabled
+            #     ]
+            #     self.cursor.executemany(
+            #         "INSERT INTO invoices (created_date, is_enabled) VALUES (?, ?)",
+            #         sample_invoices
+            #     )
 
             self.conn.commit()
 
@@ -450,3 +450,35 @@ class Model:
 
         except Exception as e:
             print(f"Failed to update order status: {e}")
+
+    def get_enabled_invoices(self):
+        """Fetch all invoices where is_enabled = 1."""
+        self.cursor.execute("SELECT id, created_date FROM invoices WHERE is_enabled = 1")
+        return self.cursor.fetchall()
+
+    def add_invoice(self, created_date):
+        """Insert a new invoice."""
+        self.cursor.execute("INSERT INTO invoices (created_date, is_enabled) VALUES (?, 1)", (created_date,))
+        self.conn.commit()
+
+    def remove_invoice(self, invoice_id):
+        """Disable an invoice by setting is_enabled to 0."""
+        self.cursor.execute("UPDATE invoices SET is_enabled = 0 WHERE id = ?", (invoice_id,))
+        self.conn.commit()
+
+    def get_grand_total(self, invoice_id):
+        """Calculate grand total from orders where invoice_id = ? and is_enabled = 0."""
+        self.cursor.execute("""
+            SELECT SUM(
+                (o.qty * m.unit_price) + 
+                ((o.qty * m.unit_price) * IFNULL(o.tax, 0) / 100) - 
+                ((o.qty * m.unit_price) * IFNULL(o.discount, 0) / 100)
+            )
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            WHERE o.invoice_id = ? AND o.is_enabled = 0
+        """, (invoice_id,))
+
+        result = self.cursor.fetchone()
+        return result[0] if result[0] is not None else 0
+
