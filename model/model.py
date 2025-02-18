@@ -451,15 +451,16 @@ class Model:
         except Exception as e:
             print(f"Failed to update order status: {e}")
 
+    # Report
     def get_enabled_invoices(self):
         """Fetch all invoices where is_enabled = 1."""
         self.cursor.execute("SELECT id, created_date FROM invoices WHERE is_enabled = 1")
         return self.cursor.fetchall()
 
-    def add_invoice(self, created_date):
-        """Insert a new invoice."""
-        self.cursor.execute("INSERT INTO invoices (created_date, is_enabled) VALUES (?, 1)", (created_date,))
-        self.conn.commit()
+    # def add_invoice(self, created_date):
+    #     """Insert a new invoice."""
+    #     self.cursor.execute("INSERT INTO invoices (created_date, is_enabled) VALUES (?, 1)", (created_date,))
+    #     self.conn.commit()
 
     def remove_invoice(self, invoice_id):
         """Disable an invoice by setting is_enabled to 0."""
@@ -482,3 +483,19 @@ class Model:
         result = self.cursor.fetchone()
         return result[0] if result[0] is not None else 0
 
+    def get_table_number_by_invoice(self, invoice_id):
+        query = "SELECT table_number FROM orders WHERE invoice_id = ? LIMIT 1"
+        self.cursor.execute(query, (invoice_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def get_invoices_by_invoice_id(self, invoice_id):
+        """Fetch invoice details by invoice_id."""
+        query = """
+            SELECT o.id, m.name, m.unit_price, o.qty, o.tax, o.discount
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            WHERE o.invoice_id = ?
+        """
+        self.cursor.execute(query, (invoice_id,))
+        return self.cursor.fetchall()  # Return all rows as a list of tuples
