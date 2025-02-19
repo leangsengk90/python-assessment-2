@@ -583,3 +583,9 @@ class Model:
         query = "DELETE FROM orders WHERE id = ?"
         self.conn.execute(query, (order_id,))
         self.conn.commit()
+
+    def disable_invoice_by_id(self, invoice_id):
+        """Set is_enabled = 0 for the given invoice_id."""
+        query = "UPDATE invoices SET is_enabled = 0 WHERE id = ?"
+        self.conn.execute(query, (invoice_id,))
+        self.conn.commit()  # ✅ Save changes

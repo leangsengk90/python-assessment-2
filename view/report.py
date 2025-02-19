@@ -42,9 +42,19 @@ class ReportView(QWidget):
             grand_total = self.model.get_grand_total(invoice_id)  # Query grand total
 
             self.table_widget.insertRow(row_index)
-            self.table_widget.setItem(row_index, 0, QTableWidgetItem(str(invoice_id)))
-            self.table_widget.setItem(row_index, 1, QTableWidgetItem(str(created_date)))
-            self.table_widget.setItem(row_index, 2, QTableWidgetItem(f"${grand_total:.2f}"))
+
+            # Set non-editable items
+            invoice_id_item = QTableWidgetItem(str(invoice_id))
+            invoice_id_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+            self.table_widget.setItem(row_index, 0, invoice_id_item)
+
+            created_date_item = QTableWidgetItem(str(created_date))
+            created_date_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+            self.table_widget.setItem(row_index, 1, created_date_item)
+
+            grand_total_item = QTableWidgetItem(f"${grand_total:.2f}")
+            grand_total_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+            self.table_widget.setItem(row_index, 2, grand_total_item)
 
             # Action buttons
             action_layout = QHBoxLayout()
@@ -67,7 +77,7 @@ class ReportView(QWidget):
             # Use functools.partial to pass parameters explicitly
             view_button.clicked.connect(partial(self.view_invoice, invoice_id, created_date))
             update_button.clicked.connect(partial(self.update_invoices, invoice_id))
-            # delete_button.clicked.connect(partial(self.delete_invoice, invoice_id))
+            delete_button.clicked.connect(partial(self.delete_invoice, invoice_id))  # ✅ Connect delete
 
     def update_invoices(self, invoice_id):
         """Open update dialog to modify orders."""
@@ -188,6 +198,25 @@ class ReportView(QWidget):
         except Exception as e:
             print(f"Failed to refresh invoice data: {e}")
 
+    def delete_invoice(self, invoice_id):
+        """Mark invoice as deleted by setting is_enabled = 0."""
+        try:
+            # Confirmation dialog
+            confirm = QMessageBox.question(
+                self, "Confirm Deletion",
+                f"Are you sure you want to delete Invoice {invoice_id}?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+
+            if confirm == QMessageBox.StandardButton.Yes:
+                self.model.disable_invoice_by_id(invoice_id)  # ✅ Call model method
+                # QMessageBox.information(self, "Success", "Invoice deleted successfully.")
+                self.load_invoice_data()  # Refresh table
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to delete invoice: {e}")
+
 class UpdateInvoiceDialog(QDialog):
     def __init__(self, model, invoice_id):
         super().__init__()
@@ -254,26 +283,100 @@ class UpdateInvoiceDialog(QDialog):
         self.table_widget.removeRow(row_index)  # Remove from UI
 
     def save_changes(self):
-        """Save the updated orders to the database."""
+        """Strictly validate inputs and update orders in the database."""
         updated_orders = []
 
-        for row_index in range(self.table_widget.rowCount()):
-            menu_dropdown = self.table_widget.cellWidget(row_index, 1)
-            menu_name = menu_dropdown.currentText()
-            menu_id = self.model.get_menu_id_by_name(menu_name)  # Convert to menu_id
+        try:
+            for row_index in range(self.table_widget.rowCount()):
+                # 🔹 Get menu dropdown (menu name → menu_id)
+                menu_dropdown = self.table_widget.cellWidget(row_index, 1)
+                if not menu_dropdown:
+                    QMessageBox.warning(self, "Input Error", "Menu selection is required!")
+                    return
 
-            qty = int(self.table_widget.item(row_index, 2).text())
-            tax = float(self.table_widget.item(row_index, 3).text())
-            discount = float(self.table_widget.item(row_index, 4).text())
-            order_id = int(self.table_widget.item(row_index, 0).text())  # Read-only column
+                menu_name = menu_dropdown.currentText().strip()
+                menu_id = self.model.get_menu_id_by_name(menu_name)  # Convert to menu_id
+                if not menu_id:
+                    QMessageBox.warning(self, "Input Error", f"Invalid menu name: {menu_name}")
+                    return
 
-            updated_orders.append((menu_id, qty, tax, discount, order_id))
+                # 🔹 Get input fields
+                qty_item = self.table_widget.item(row_index, 2)
+                tax_item = self.table_widget.item(row_index, 3)
+                discount_item = self.table_widget.item(row_index, 4)
+                order_id_item = self.table_widget.item(row_index, 0)  # Read-only column
 
-        # 🔹 Update existing orders
-        self.model.update_orders(updated_orders)
+                # 🔹 Ensure all fields exist
+                if not all([qty_item, tax_item, discount_item, order_id_item]):
+                    QMessageBox.warning(self, "Input Error", "All fields must be filled!")
+                    return
 
-        # 🔹 Delete removed orders
-        for order_id in self.deleted_orders:
-            self.model.delete_order(order_id)
+                qty_text = qty_item.text().strip()
+                tax_text = tax_item.text().strip()
+                discount_text = discount_item.text().strip()
+                order_id_text = order_id_item.text().strip()
 
-        self.accept()  # Close dialog
+                # 🔹 Ensure fields are NOT empty
+                if not qty_text or not tax_text or not discount_text or not order_id_text:
+                    QMessageBox.warning(self, "Input Error", "Fields cannot be empty!")
+                    return
+
+                # 🔹 Validate numeric fields using regex (only digits & decimal allowed)
+                import re
+                if not re.fullmatch(r"\d+", qty_text):
+                    QMessageBox.warning(self, "Input Error", "Quantity must be a whole number!")
+                    return
+
+                if not re.fullmatch(r"\d+(\.\d+)?", tax_text):
+                    QMessageBox.warning(self, "Input Error", "Tax must be a valid number!")
+                    return
+
+                if not re.fullmatch(r"\d+(\.\d+)?", discount_text):
+                    QMessageBox.warning(self, "Input Error", "Discount must be a valid number!")
+                    return
+
+                # 🔹 Convert values
+                qty = int(qty_text)
+                tax = float(tax_text)
+                discount = float(discount_text)
+                order_id = int(order_id_text)  # Read-only column
+
+                # 🔹 Validate Quantity
+                if qty <= 0:
+                    QMessageBox.warning(self, "Input Error", "Quantity must be greater than 0!")
+                    return
+
+                # 🔹 Validate Tax and Discount (0-100%)
+                if not (0 <= tax <= 100):
+                    QMessageBox.warning(self, "Input Error", "Tax must be between 0 and 100!")
+                    return
+
+                if not (0 <= discount <= 100):
+                    QMessageBox.warning(self, "Input Error", "Discount must be between 0 and 100!")
+                    return
+
+                # 🔹 Add to list for update
+                updated_orders.append((menu_id, qty, tax, discount, order_id))
+
+            # 🔹 Process Database Updates
+            if updated_orders:
+                try:
+                    self.model.update_orders(updated_orders)
+                except Exception as e:
+                    QMessageBox.critical(self, "Database Error", f"Failed to update orders: {e}")
+                    return
+
+            # 🔹 Delete Removed Orders
+            for order_id in self.deleted_orders:
+                try:
+                    self.model.delete_order(order_id)
+                except Exception as e:
+                    QMessageBox.critical(self, "Database Error", f"Failed to delete order {order_id}: {e}")
+
+            QMessageBox.information(self, "Success", "Orders updated successfully!")
+            self.accept()  # Close dialog
+
+        except Exception as e:
+            QMessageBox.critical(self, "Unexpected Error", f"Something went wrong: {e}")
+
+
