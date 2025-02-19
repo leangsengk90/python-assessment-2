@@ -19,6 +19,14 @@ class ReportView(QWidget):
 
         self.layout = QVBoxLayout(self)
 
+        # Total sales for today
+        self.total_label = QLabel("Total Sales for Today: $0.00")
+        self.layout.addWidget(self.total_label)
+
+        # Get today's total sales and update the label
+        today_total = self.model.get_today_sales_total()
+        self.total_label.setText(f"Total Sales for Today: ${today_total:.2f}")
+
         # Date and Time Range Selection
         self.start_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
         self.start_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
@@ -56,6 +64,9 @@ class ReportView(QWidget):
         if start_datetime > end_datetime:
             QMessageBox.warning(self, "Input Error", "Start date must be earlier than end date!")
             return
+
+        # Update the total label with the total grand total
+        self.total_grand_total_label.setText(f"Total: ${0:.2f}")
 
         # Load invoices within the date range
         self.load_invoice_data(start_datetime, end_datetime)
@@ -117,6 +128,10 @@ class ReportView(QWidget):
 
             # Update the total label with the total grand total
             self.total_grand_total_label.setText(f"Total: ${total_grand_total:.2f}")
+
+            # Get today's total sales and update the label
+            today_total = self.model.get_today_sales_total()
+            self.total_label.setText(f"Total Sales for Today: ${today_total:.2f}")
 
     def update_invoices(self, invoice_id):
         """Open update dialog to modify orders."""

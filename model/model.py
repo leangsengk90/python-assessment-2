@@ -2,6 +2,8 @@ import os
 import shutil
 import sqlite3
 import uuid
+from datetime import datetime
+
 import bcrypt  # Import bcrypt for password hashing
 
 db_path = "/Users/kaoleangseng/PycharmProjects/RMS/controller/rms.db"
@@ -603,3 +605,24 @@ class Model:
         # Execute the query with the parameters
         return self.conn.execute(query, params)
 
+    def get_today_sales_total(self):
+        """Get total grand total of sales for today from the orders table where invoice_id is not null and is_enabled is 0."""
+        today = datetime.now().date()
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT SUM(
+                (o.qty * m.unit_price) + 
+                ((o.qty * m.unit_price) * IFNULL(o.tax, 0) / 100) - 
+                ((o.qty * m.unit_price) * IFNULL(o.discount, 0) / 100)
+            )
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            JOIN invoices i ON o.invoice_id = i.id  
+            WHERE o.invoice_id IS NOT NULL 
+            AND o.is_enabled = 0 
+            AND i.is_enabled = 1 
+            AND DATE(o.order_date) = ?
+        """, (today,))
+
+        result = cursor.fetchone()[0]
+        return result if result is not None else 0.0
