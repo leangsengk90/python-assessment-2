@@ -1,8 +1,11 @@
 from functools import partial
 
+from PyQt6.QtCore import Qt
+
 from model.model import Model
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QHBoxLayout, QMessageBox
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QHBoxLayout, \
+    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import os
@@ -63,8 +66,14 @@ class ReportView(QWidget):
 
             # Use functools.partial to pass parameters explicitly
             view_button.clicked.connect(partial(self.view_invoice, invoice_id, created_date))
-            # update_button.clicked.connect(partial(self.update_invoice, invoice_id))
+            update_button.clicked.connect(partial(self.update_invoices, invoice_id))
             # delete_button.clicked.connect(partial(self.delete_invoice, invoice_id))
+
+    def update_invoices(self, invoice_id):
+        """Open update dialog to modify orders."""
+        dialog = UpdateInvoiceDialog(self.model, invoice_id)
+        if dialog.exec():  # If dialog is accepted (saved)
+            self.load_invoice_data()  # Refresh report
 
     def view_invoice(self, invoice_id, get_invoice_date):
         """Generate the invoice as a PDF and view it."""
@@ -178,3 +187,93 @@ class ReportView(QWidget):
 
         except Exception as e:
             print(f"Failed to refresh invoice data: {e}")
+
+class UpdateInvoiceDialog(QDialog):
+    def __init__(self, model, invoice_id):
+        super().__init__()
+        self.setWindowTitle("Update Orders")
+        self.resize(900, 500)  # 🔹 Increased size for better UI
+        self.model = model
+        self.invoice_id = invoice_id
+        self.orders = self.model.get_orders_by_invoice(invoice_id)  # Fetch orders
+        self.menu_items = self.model.get_all_menu_items()  # Fetch menu (menu_id, menu_name)
+
+        self.layout = QVBoxLayout(self)
+
+        # Table Widget
+        self.table_widget = QTableWidget()
+        self.table_widget.setColumnCount(6)
+        self.table_widget.setHorizontalHeaderLabels(["Order ID", "Menu", "Quantity", "Tax", "Discount", "Action"])
+        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.layout.addWidget(self.table_widget)
+
+        self.deleted_orders = []  # 🔹 Store orders to delete
+        self.load_order_data()
+
+        # Save Button
+        save_button = QPushButton("Save Changes")
+        save_button.setStyleSheet("background-color: #2ecc71; color: white; font-weight: bold;")
+        save_button.clicked.connect(self.save_changes)
+        self.layout.addWidget(save_button)
+
+    def load_order_data(self):
+        """Load orders into the table with dropdown for menu selection."""
+        self.table_widget.setRowCount(0)  # Clear table before reloading
+
+        for row_index, (order_id, menu_name, qty, tax, discount) in enumerate(self.orders):
+            self.table_widget.insertRow(row_index)
+
+            # 🔹 Dropdown (QComboBox) for Menu Selection
+            menu_dropdown = QComboBox()
+            menu_dropdown.addItems([name for _, name in self.menu_items])  # Add menu names
+            menu_dropdown.setCurrentText(menu_name)  # Set current selection
+            self.table_widget.setCellWidget(row_index, 1, menu_dropdown)
+
+            # Other editable fields
+            self.table_widget.setItem(row_index, 2, QTableWidgetItem(str(qty)))
+            self.table_widget.setItem(row_index, 3, QTableWidgetItem(str(tax)))
+            self.table_widget.setItem(row_index, 4, QTableWidgetItem(str(discount)))
+
+            # 🔹 Order ID (Non-Editable)
+            order_id_item = QTableWidgetItem(str(order_id))
+            order_id_item.setFlags(order_id_item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Make it read-only
+            self.table_widget.setItem(row_index, 0, order_id_item)
+
+            # 🔹 Remove Button
+            remove_button = QPushButton("Remove")
+            remove_button.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
+            remove_button.clicked.connect(lambda _, row=row_index: self.remove_order(row))  # Handle row removal
+            self.table_widget.setCellWidget(row_index, 5, remove_button)
+
+    def remove_order(self, row_index):
+        """Remove order from the table and mark it for deletion."""
+        order_id_item = self.table_widget.item(row_index, 0)
+        if order_id_item:
+            order_id = int(order_id_item.text())  # Get order ID
+            self.deleted_orders.append(order_id)  # Store for deletion
+        self.table_widget.removeRow(row_index)  # Remove from UI
+
+    def save_changes(self):
+        """Save the updated orders to the database."""
+        updated_orders = []
+
+        for row_index in range(self.table_widget.rowCount()):
+            menu_dropdown = self.table_widget.cellWidget(row_index, 1)
+            menu_name = menu_dropdown.currentText()
+            menu_id = self.model.get_menu_id_by_name(menu_name)  # Convert to menu_id
+
+            qty = int(self.table_widget.item(row_index, 2).text())
+            tax = float(self.table_widget.item(row_index, 3).text())
+            discount = float(self.table_widget.item(row_index, 4).text())
+            order_id = int(self.table_widget.item(row_index, 0).text())  # Read-only column
+
+            updated_orders.append((menu_id, qty, tax, discount, order_id))
+
+        # 🔹 Update existing orders
+        self.model.update_orders(updated_orders)
+
+        # 🔹 Delete removed orders
+        for order_id in self.deleted_orders:
+            self.model.delete_order(order_id)
+
+        self.accept()  # Close dialog

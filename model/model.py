@@ -499,3 +499,87 @@ class Model:
         """
         self.cursor.execute(query, (invoice_id,))
         return self.cursor.fetchall()  # Return all rows as a list of tuples
+
+    def update_invoices(self, invoice_id, updated_data):
+        """Update orders table for a given invoice."""
+        query = """
+        UPDATE orders 
+        SET table_number = ?, menu_id = ?, qty = ?, tax = ?, discount = ?
+        WHERE invoice_id = ? AND is_enabled = 0
+        """
+        self.cursor.execute(query, (
+            updated_data["table_number"],
+            updated_data["menu_id"],
+            updated_data["qty"],
+            updated_data["tax"],
+            updated_data["discount"],
+            invoice_id
+        ))
+        self.conn.commit()
+
+    def get_menu_mapping(self):
+        """Returns a dictionary mapping menu names to menu IDs."""
+        query = "SELECT id, name FROM menu"
+        self.cursor.execute(query)
+        return {name: menu_id for menu_id, name in self.cursor.fetchall()}
+
+    def get_invoice_details(self, invoice_id):
+        """Fetch invoice details for editing."""
+        query = """
+        SELECT o.table_number, o.menu_id, o.qty, o.tax, o.discount, m.name
+        FROM orders o
+        JOIN menu m ON o.menu_id = m.id
+        WHERE o.invoice_id = ? AND o.is_enabled = 0
+        """
+        self.cursor.execute(query, (invoice_id,))
+        result = self.cursor.fetchone()
+        if result:
+            return {
+                "table_number": result[0],
+                "menu_id": result[1],
+                "qty": result[2],
+                "tax": result[3],
+                "discount": result[4],
+                "menu_name": result[5],  # For displaying in UI
+            }
+        return None
+
+    def get_orders_by_invoice(self, invoice_id):
+        """Fetch all orders for a given invoice_id where is_enabled = 0."""
+        query = """
+            SELECT o.id, m.name, o.qty, o.tax, o.discount
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            WHERE o.invoice_id = ? AND o.is_enabled = 0
+        """
+        cursor = self.conn.execute(query, (invoice_id,))  # ✅ No keyword arguments
+        return cursor.fetchall()  # ✅ Correct way to fetch all results
+
+    def get_menu_id_by_name(self, menu_name):
+        """Get menu_id from menu_name."""
+        query = "SELECT id FROM menu WHERE name = ?"
+        cursor = self.conn.execute(query, (menu_name,))  # ✅ No keyword arguments
+        result = cursor.fetchone()  # ✅ Correct way to fetch one result
+        return result[0] if result else None  # Return menu_id if found
+
+    def update_orders(self, updated_orders):
+        """Update multiple orders at once."""
+        query = """
+            UPDATE orders 
+            SET menu_id = ?, qty = ?, tax = ?, discount = ?
+            WHERE id = ?
+        """
+        self.conn.executemany(query, updated_orders)  # ✅ Execute batch update
+        self.conn.commit()  # ✅ Save changes
+
+    def get_all_menu_items(self):
+        """Fetch all menu items as (menu_id, menu_name)."""
+        query = "SELECT id, name FROM menu"
+        cursor = self.conn.execute(query)
+        return cursor.fetchall()
+
+    def delete_order(self, order_id):
+        """Delete order from orders table."""
+        query = "DELETE FROM orders WHERE id = ?"
+        self.conn.execute(query, (order_id,))
+        self.conn.commit()
