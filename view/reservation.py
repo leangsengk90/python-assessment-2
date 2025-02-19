@@ -139,7 +139,7 @@ class UpdateReservationDialog(QDialog):
         layout.addRow("Phone:", self.phone_input)
 
         # Date (Editable, Calendar Picker)
-        self.date_input = QDateEdit()
+        self.date_input = QDateEdit(calendarPopup=True)
         self.date_input.setDate(QDate.fromString(date, "yyyy-MM-dd"))  # Set initial date
         self.date_input.setDisplayFormat("yyyy-MM-dd")
         layout.addRow("Date:", self.date_input)
@@ -190,7 +190,7 @@ class AddReservationDialog(QDialog):
         layout.addRow("Phone:", self.phone_input)
 
         # Date (Editable, Calendar Picker)
-        self.date_input = QDateEdit()
+        self.date_input = QDateEdit(calendarPopup=True)
         self.date_input.setDate(QDate.currentDate())  # Default to today
         self.date_input.setDisplayFormat("yyyy-MM-dd")
         layout.addRow("Date:", self.date_input)

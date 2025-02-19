@@ -5,7 +5,7 @@ from PyQt6.QtCore import Qt
 from model.model import Model
 
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QHBoxLayout, \
-    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox
+    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox, QDateTimeEdit
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import os
@@ -20,18 +20,46 @@ class ReportView(QWidget):
 
         self.layout = QVBoxLayout(self)
 
+        # Date and Time Range Selection
+        self.start_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.start_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.start_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+
+        self.end_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.end_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.end_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+
+        # Button to filter invoices
+        filter_button = QPushButton("Filter Invoices")
+        filter_button.clicked.connect(self.filter_invoices)
+
+        # Add to layout
+        self.layout.addWidget(self.start_datetime_edit)
+        self.layout.addWidget(self.end_datetime_edit)
+        self.layout.addWidget(filter_button)
+
         # Table Widget
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
 
-        self.load_invoice_data()
+        self.load_invoice_data()  # Load initial data
 
-    from functools import partial
+    def filter_invoices(self):
+        """Filter invoices based on the selected date and time range."""
+        start_datetime = self.start_datetime_edit.dateTime().toPyDateTime()
+        end_datetime = self.end_datetime_edit.dateTime().toPyDateTime()
 
-    def load_invoice_data(self):
-        """Load invoice data where is_enabled = 1."""
+        if start_datetime > end_datetime:
+            QMessageBox.warning(self, "Input Error", "Start date must be earlier than end date!")
+            return
+
+        # Load invoices within the date range
+        self.load_invoice_data(start_datetime, end_datetime)
+
+    def load_invoice_data(self, start_datetime=None, end_datetime=None):
+        """Load invoice data with optional date range filtering."""
         self.table_widget.setRowCount(0)  # Clear table before reloading
-        data = self.model.get_enabled_invoices()  # Get enabled invoices
+        data = self.model.get_enabled_invoices_by_date(start_datetime, end_datetime)  # Pass date range
 
         self.table_widget.setColumnCount(4)
         self.table_widget.setHorizontalHeaderLabels(["Invoice ID", "Created Date", "Grand Total", "Actions"])
@@ -74,10 +102,10 @@ class ReportView(QWidget):
             action_widget.setLayout(action_layout)
             self.table_widget.setCellWidget(row_index, 3, action_widget)
 
-            # Use functools.partial to pass parameters explicitly
+            # Connect buttons to their respective functions
             view_button.clicked.connect(partial(self.view_invoice, invoice_id, created_date))
             update_button.clicked.connect(partial(self.update_invoices, invoice_id))
-            delete_button.clicked.connect(partial(self.delete_invoice, invoice_id))  # ✅ Connect delete
+            delete_button.clicked.connect(partial(self.delete_invoice, invoice_id))
 
     def update_invoices(self, invoice_id):
         """Open update dialog to modify orders."""

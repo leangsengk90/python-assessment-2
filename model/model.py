@@ -589,3 +589,17 @@ class Model:
         query = "UPDATE invoices SET is_enabled = 0 WHERE id = ?"
         self.conn.execute(query, (invoice_id,))
         self.conn.commit()  # ✅ Save changes
+
+    def get_enabled_invoices_by_date(self, start_datetime=None, end_datetime=None):
+        """Fetch invoices that are enabled and fall within the specified date range."""
+        query = "SELECT id, created_date FROM invoices WHERE is_enabled = 1"
+
+        params = []
+        if start_datetime and end_datetime:
+            query += " AND created_date BETWEEN ? AND ?"
+            params.append(start_datetime)
+            params.append(end_datetime)
+
+        # Execute the query with the parameters
+        return self.conn.execute(query, params)
+
