@@ -3,9 +3,8 @@ from functools import partial
 from PyQt6.QtCore import Qt
 
 from model.model import Model
-
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QHBoxLayout, \
-    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox, QDateTimeEdit
+    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox, QDateTimeEdit, QLabel
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import os
@@ -42,6 +41,11 @@ class ReportView(QWidget):
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
 
+        self.total_grand_total_label = QLabel("Total: $0.00")
+        self.total_grand_total_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 100px;")
+
+        self.layout.addWidget(self.total_grand_total_label)
+
         self.load_invoice_data()  # Load initial data
 
     def filter_invoices(self):
@@ -66,8 +70,12 @@ class ReportView(QWidget):
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
 
+        total_grand_total = 0  # Initialize total grand total
+
         for row_index, (invoice_id, created_date) in enumerate(data):
             grand_total = self.model.get_grand_total(invoice_id)  # Query grand total
+
+            total_grand_total += grand_total  # Accumulate grand total
 
             self.table_widget.insertRow(row_index)
 
@@ -106,6 +114,9 @@ class ReportView(QWidget):
             view_button.clicked.connect(partial(self.view_invoice, invoice_id, created_date))
             update_button.clicked.connect(partial(self.update_invoices, invoice_id))
             delete_button.clicked.connect(partial(self.delete_invoice, invoice_id))
+
+            # Update the total label with the total grand total
+            self.total_grand_total_label.setText(f"Total: ${total_grand_total:.2f}")
 
     def update_invoices(self, invoice_id):
         """Open update dialog to modify orders."""
