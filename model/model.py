@@ -626,3 +626,45 @@ class Model:
 
         result = cursor.fetchone()[0]
         return result if result is not None else 0.0
+
+    def get_week_sales_total(self):
+        """Get total grand total of sales for this week from the orders table where invoice_id is not null and is_enabled is 0."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT SUM(
+                (o.qty * m.unit_price) + 
+                ((o.qty * m.unit_price) * IFNULL(o.tax, 0) / 100) - 
+                ((o.qty * m.unit_price) * IFNULL(o.discount, 0) / 100)
+            )
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            JOIN invoices i ON o.invoice_id = i.id  
+            WHERE o.invoice_id IS NOT NULL 
+            AND o.is_enabled = 0 
+            AND i.is_enabled = 1 
+            AND DATE(o.order_date) >= DATE('now', 'weekday 0', '-6 days')  -- Start of the week
+        """)
+
+        result = cursor.fetchone()[0]
+        return result if result is not None else 0.0
+
+    def get_month_sales_total(self):
+        """Get total grand total of sales for this month from the orders table where invoice_id is not null and is_enabled is 0."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT SUM(
+                (o.qty * m.unit_price) + 
+                ((o.qty * m.unit_price) * IFNULL(o.tax, 0) / 100) - 
+                ((o.qty * m.unit_price) * IFNULL(o.discount, 0) / 100)
+            )
+            FROM orders o
+            JOIN menu m ON o.menu_id = m.id
+            JOIN invoices i ON o.invoice_id = i.id  
+            WHERE o.invoice_id IS NOT NULL 
+            AND o.is_enabled = 0 
+            AND i.is_enabled = 1 
+            AND strftime('%Y-%m', o.order_date) = strftime('%Y-%m', 'now')  -- Current month
+        """)
+
+        result = cursor.fetchone()[0]
+        return result if result is not None else 0.0

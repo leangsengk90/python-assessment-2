@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt
 
 from model.model import Model
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QHBoxLayout, \
-    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox, QDateTimeEdit, QLabel
+    QMessageBox, QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox, QDateTimeEdit, QLabel, QGridLayout, QSizePolicy
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import os
@@ -17,40 +17,136 @@ class ReportView(QWidget):
         self.resize(600, 400)
         self.model = Model()
 
+        # Initialize the main layout
         self.layout = QVBoxLayout(self)
 
+        # Create a layout for total sales
+        total_sales_layout = QHBoxLayout()
+
         # Total sales for today
-        self.total_label = QLabel("Total Sales for Today: $0.00")
-        self.layout.addWidget(self.total_label)
+        self.total_today_label = QLabel("Total Sales for Today: $0.00")
+        self.total_today_label.setFixedWidth(300)
+        self.total_today_label.setStyleSheet("""
+                        QLabel {
+                            background-color: #7AC4AD;  /* Green background */
+                            color: white;               /* White text */
+                            font-weight: bold;          /* Bold text */
+                            padding: 20px 20px;         /* Padding around the button */
+                            border-radius: 10px;         /* Rounded corners */
+                            border: none;               /* No border */
+                        }
+                        QLabel:hover {
+                            background-color: #45a049;  /* Darker green on hover */
+                        }
+                    """)
+        self.total_today_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        total_sales_layout.addWidget(self.total_today_label)
+
+        # Total sales for this week
+        self.total_week_label = QLabel("Total Sales for This Week: $0.00")
+        self.total_week_label.setFixedWidth(300)
+        self.total_week_label.setStyleSheet("""
+                        QLabel {
+                            background-color: #008B6A;  /* Green background */
+                            color: white;               /* White text */
+                            font-weight: bold;          /* Bold text */
+                            padding: 20px 20px;         /* Padding around the button */
+                            border-radius: 10px;         /* Rounded corners */
+                            border: none;               /* No border */
+                        }
+                        QLabel:hover {
+                            background-color: #45a049;  /* Darker green on hover */
+                        }
+                    """)
+        self.total_week_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        total_sales_layout.addWidget(self.total_week_label)
+
+        # Total sales for this month
+        self.total_month_label = QLabel("Total Sales for This Month: $0.00")
+        self.total_month_label.setFixedWidth(300)
+        self.total_month_label.setStyleSheet("""
+                        QLabel {
+                            background-color: #0D3E1E;  /* Green background */
+                            color: white;               /* White text */
+                            font-weight: bold;          /* Bold text */
+                            padding: 20px 20px;         /* Padding around the button */
+                            border-radius: 10px;         /* Rounded corners */
+                            border: none;               /* No border */
+                        }
+                        QLabel:hover {
+                            background-color: #45a049;  /* Darker green on hover */
+                        }
+                    """)
+        self.total_month_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        total_sales_layout.addWidget(self.total_month_label)
+
+        # Add the total sales layout to the main layout
+        self.layout.addLayout(total_sales_layout)
 
         # Get today's total sales and update the label
         today_total = self.model.get_today_sales_total()
-        self.total_label.setText(f"Total Sales for Today: ${today_total:.2f}")
+        self.total_today_label.setText(f"Total Sales for Today: ${today_total:.2f}")
 
-        # Date and Time Range Selection
+        # Get week's total sales and update the label
+        week_total = self.model.get_week_sales_total()  # Assuming you have this method
+        self.total_week_label.setText(f"Total Sales for This Week: ${week_total:.2f}")
+
+        # Get month's total sales and update the label
+        month_total = self.model.get_month_sales_total()  # Assuming you have this method
+        self.total_month_label.setText(f"Total Sales for This Month: ${month_total:.2f}")
+
+        # Row for date and time selection
+        datetime_layout = QHBoxLayout()  # Horizontal layout for date/time selection
+
+        start_label = QLabel("Start Date & Time:")
+        start_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)  # Prevents stretching
+        datetime_layout.addWidget(start_label)
+
         self.start_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.start_datetime_edit.setFixedWidth(400)
         self.start_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
         self.start_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        datetime_layout.addWidget(self.start_datetime_edit)
+
+        end_label = QLabel("End Date & Time:")
+        end_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)  # Prevents stretching
+        datetime_layout.addWidget(end_label)
 
         self.end_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.end_datetime_edit.setFixedWidth(400)
         self.end_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
         self.end_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        datetime_layout.addWidget(self.end_datetime_edit)
 
         # Button to filter invoices
         filter_button = QPushButton("Filter Invoices")
+        filter_button.setStyleSheet("""
+                        QPushButton {
+                            background-color: #AF745B;  /* Green background */
+                            color: white;               /* White text */
+                            font-weight: bold;          /* Bold text */
+                            padding: 8px 20px;         /* Padding around the button */
+                            border-radius: 10px;         /* Rounded corners */
+                            border: none;               /* No border */
+                        }
+                        QPushButton:hover {
+                            background-color: #764E3D;  /* Darker green on hover */
+                        }
+                    """)
+        filter_button.setFixedWidth(200)
         filter_button.clicked.connect(self.filter_invoices)
+        datetime_layout.addWidget(filter_button)
 
-        # Add to layout
-        self.layout.addWidget(self.start_datetime_edit)
-        self.layout.addWidget(self.end_datetime_edit)
-        self.layout.addWidget(filter_button)
+        self.layout.addLayout(datetime_layout)  # Add date/time layout to main layout
 
         # Table Widget
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget)
 
+
         self.total_grand_total_label = QLabel("Total: $0.00")
         self.total_grand_total_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 100px;")
+        self.total_grand_total_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.layout.addWidget(self.total_grand_total_label)
 
@@ -131,7 +227,7 @@ class ReportView(QWidget):
 
             # Get today's total sales and update the label
             today_total = self.model.get_today_sales_total()
-            self.total_label.setText(f"Total Sales for Today: ${today_total:.2f}")
+            self.total_today_label.setText(f"Total Sales for Today: ${today_total:.2f}")
 
     def update_invoices(self, invoice_id):
         """Open update dialog to modify orders."""
