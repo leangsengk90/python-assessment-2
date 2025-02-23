@@ -343,6 +343,17 @@ class ReportView(QWidget):
     def refresh_report_data(self):
         try:
             print("Refresh Invoice...")
+            # Get today's total sales and update the label
+            today_total = self.model.get_today_sales_total()
+            self.total_today_label.setText(f"Total Sales for Today: ${today_total:.2f}")
+
+            # Get week's total sales and update the label
+            week_total = self.model.get_week_sales_total()  # Assuming you have this method
+            self.total_week_label.setText(f"Total Sales for This Week: ${week_total:.2f}")
+
+            # Get month's total sales and update the label
+            month_total = self.model.get_month_sales_total()  # Assuming you have this method
+            self.total_month_label.setText(f"Total Sales for This Month: ${month_total:.2f}")
             self.load_invoice_data()
 
         except Exception as e:
