@@ -41,7 +41,20 @@ class OrderView(QWidget):
         self.table_dropdown.currentIndexChanged.connect(self.on_table_selected)
 
         self.clear_button = QPushButton("Clear all")
-        self.clear_button.setStyleSheet("background-color: #f39c12; color: white;")
+        # self.clear_button.setStyleSheet("background-color: #f39c12; color: white;")
+        self.clear_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #f39c12;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 10px 20px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: orange;  /* Darker green on hover */
+                    }
+                """)
         self.clear_button.clicked.connect(self.clear_order)
 
         table_layout.addWidget(self.table_label)
@@ -79,7 +92,20 @@ class OrderView(QWidget):
         # Create Order Button
         self.create_order_button = QPushButton("Create Order")
         self.create_order_button.setFixedHeight(50)  # Set height only
-        self.create_order_button.setStyleSheet("background-color: #3498db; color: white;")
+        # self.create_order_button.setStyleSheet("background-color: #3498db; color: white;")
+        self.create_order_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3498db;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 10px 20px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: blue;  /* Darker green on hover */
+                    }
+                """)
         self.create_order_button.clicked.connect(self.create_order)
         self.right_layout.addWidget(self.create_order_button)
 
@@ -131,9 +157,35 @@ class OrderView(QWidget):
 
             # Add and Remove buttons
             add_btn = QPushButton("Add")
-            add_btn.setStyleSheet("background-color: #4CAF50; color: white;")
+            # add_btn.setStyleSheet("background-color: #4CAF50; color: white;")
+            add_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #4CAF50;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 5px 10px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: #45a049;  /* Darker green on hover */
+                    }
+                """)
             remove_btn = QPushButton("Remove")
-            remove_btn.setStyleSheet("background-color: #e74c3c; color: white;")
+            # remove_btn.setStyleSheet("background-color: #e74c3c; color: white;")
+            remove_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #e74c3c;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 5px 10px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: red;  /* Darker green on hover */
+                    }
+                """)
             add_btn.clicked.connect(partial(self.add_to_order, id_, name, unit_price))
             remove_btn.clicked.connect(partial(self.remove_from_order, id_))
 
