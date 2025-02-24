@@ -49,6 +49,7 @@ class InvoiceView(QWidget):
             "Order ID", "Table Number", "Order Date", "Menu Name", "Unit Price", "Quantity", "Tax", "Discount", "Total",
             "Actions"
         ])
+        self.table.verticalHeader().setDefaultSectionSize(60)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         main_layout.addWidget(QLabel("Order Records"))
         main_layout.addWidget(self.table)
@@ -144,13 +145,39 @@ class InvoiceView(QWidget):
                 action_layout.setContentsMargins(0, 0, 0, 0)
 
                 update_button = QPushButton("Update")
-                update_button.setStyleSheet("background-color: #3498db; color: white;")
+                update_button.setFixedHeight(40)
+                update_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3498db; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 5px 10px;        
+                        border-radius: 10px;         
+                        border: none;      
+                    }
+                    QPushButton:hover {
+                        background-color: blue;  
+                    }
+                """)
                 update_button.clicked.connect(
                     partial(self.open_update_dialog, order_id, table_number, order_date, menu_name, unit_price, qty,
                             tax, discount))
 
                 delete_button = QPushButton("Delete")
-                delete_button.setStyleSheet("background-color: #e74c3c; color: white;")
+                delete_button.setFixedHeight(40)
+                delete_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #e74c3c; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 5px 10px;        
+                        border-radius: 10px;         
+                        border: none;      
+                    }
+                    QPushButton:hover {
+                        background-color: red;  
+                    }
+                """)
                 delete_button.clicked.connect(partial(self.confirm_delete, order_id))
 
                 action_layout.addWidget(update_button)

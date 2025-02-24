@@ -82,8 +82,34 @@ class MenuView(QWidget):
             btn_delete = QPushButton("Delete")
 
             # Set colors for the buttons
-            btn_update.setStyleSheet("background-color: #3498db; color: white; font-weight: bold;")
-            btn_delete.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
+            # btn_update.setStyleSheet("background-color: #3498db; color: white; font-weight: bold;")
+            btn_update.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3498db;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 10px 20px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: blue;  /* Darker green on hover */
+                    }
+                """)
+            # btn_delete.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
+            btn_delete.setStyleSheet("""
+                    QPushButton {
+                        background-color: #e74c3c;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 10px 20px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: red;  /* Darker green on hover */
+                    }
+                """)
 
             btn_update.clicked.connect(lambda _, id=menu_id: self.update_item(id))
             btn_delete.clicked.connect(lambda _, id=menu_id: self.delete_item(id))

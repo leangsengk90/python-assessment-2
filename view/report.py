@@ -173,6 +173,7 @@ class ReportView(QWidget):
         data = self.model.get_enabled_invoices_by_date(start_datetime, end_datetime)  # Pass date range
 
         self.table_widget.setColumnCount(4)
+        self.table_widget.verticalHeader().setDefaultSectionSize(60)
         self.table_widget.setHorizontalHeaderLabels(["Invoice ID", "Created Date", "Grand Total", "Actions"])
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -205,9 +206,49 @@ class ReportView(QWidget):
             update_button = QPushButton("Update")
             delete_button = QPushButton("Delete")
 
-            view_button.setStyleSheet("background-color: #3498db; color: white; font-weight: bold;")
-            update_button.setStyleSheet("background-color: #f1c40f; color: white; font-weight: bold;")
-            delete_button.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
+            view_button.setFixedHeight(40)
+            view_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #f39c12; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 5px 10px;        
+                        border-radius: 10px;         
+                        border: none;      
+                    }
+                    QPushButton:hover {
+                        background-color: orange;  
+                    }
+                """)
+            delete_button.setFixedHeight(40)
+            delete_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #e74c3c; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 5px 10px;        
+                        border-radius: 10px;         
+                        border: none;      
+                    }
+                    QPushButton:hover {
+                        background-color: red;  
+                    }
+                """)
+
+            update_button.setFixedHeight(40)
+            update_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3498db; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 5px 10px;        
+                        border-radius: 10px;         
+                        border: none;      
+                    }
+                    QPushButton:hover {
+                        background-color: blue;  
+                    }
+                """)
 
             action_layout.addWidget(view_button)
             action_layout.addWidget(update_button)

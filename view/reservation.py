@@ -53,7 +53,7 @@ class ReservationView(QWidget):
         self.table_widget.setColumnWidth(5, 100)
         self.table_widget.setColumnWidth(6, 200)
 
-        self.table_widget.verticalHeader().setDefaultSectionSize(40)  # Increase row height
+        self.table_widget.verticalHeader().setDefaultSectionSize(60)  # Increase row height
         self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)  # Make table uneditable
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -76,8 +76,34 @@ class ReservationView(QWidget):
             delete_button = QPushButton("Delete")
 
             # Set button colors
-            update_button.setStyleSheet("background-color: #3498db; color: white; font-weight: bold;")
-            delete_button.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
+            update_button.setFixedHeight(40)
+            update_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3498db;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 10px 20px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: blue;  /* Darker green on hover */
+                    }
+                """)
+            delete_button.setFixedHeight(40)
+            delete_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #e74c3c; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 5px 10px;        
+                        border-radius: 10px;         
+                        border: none;      
+                    }
+                    QPushButton:hover {
+                        background-color: red;  
+                    }
+                """)
 
             update_button.clicked.connect(
                 lambda _, rn=reserve_number, tbl=tables, nm=name, ph=phone, dt=date, tm=time: self.open_update_dialog(rn, tbl, nm, ph, dt, tm))
