@@ -628,7 +628,7 @@ class Model:
         return result if result is not None else 0.0
 
     def get_week_sales_total(self):
-        """Get total grand total of sales for this week from the orders table where invoice_id is not null and is_enabled is 0."""
+        """Get total grand total of sales for the current week within this month."""
         cursor = self.conn.cursor()
         cursor.execute("""
             SELECT SUM(
@@ -642,7 +642,8 @@ class Model:
             WHERE o.invoice_id IS NOT NULL 
             AND o.is_enabled = 0 
             AND i.is_enabled = 1 
-            AND DATE(o.order_date) >= DATE('now', 'weekday 0', '-6 days')  -- Start of the week
+            AND strftime('%Y-%m', o.order_date) = strftime('%Y-%m', 'now')  -- Ensure it's from this month
+            AND DATE(o.order_date) >= DATE('now', 'weekday 0', '-6 days')  -- Get sales from this week's start
         """)
 
         result = cursor.fetchone()[0]
