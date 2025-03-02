@@ -333,7 +333,6 @@ class InvoiceView(QWidget):
             print(f"Failed to generate invoice PDF: {e}")
             QMessageBox.warning(self, "Error", "Failed to generate PDF.")
 
-
 class UpdateDialog(QDialog):
     def __init__(self, invoice_data, model, parent=None):
         super().__init__(parent)
@@ -396,7 +395,57 @@ class UpdateDialog(QDialog):
         layout.addLayout(form_layout)
         layout.addLayout(button_layout)
 
+        # Style buttons
+        self.apply_button_styles()
+
         self.setLayout(layout)
+
+    def apply_button_styles(self):
+        # Style Save button
+        self.save_button.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #388e3c;
+            }
+            QPushButton:disabled {
+                background-color: #9e9e9e;
+                color: #d3d3d3;
+            }
+        """)
+
+        # Style Cancel button
+        self.cancel_button.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                background-color: #f44336;
+                color: white;
+                border: none;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #e53935;
+            }
+            QPushButton:pressed {
+                background-color: #d32f2f;
+            }
+            QPushButton:disabled {
+                background-color: #9e9e9e;
+                color: #d3d3d3;
+            }
+        """)
 
     def save_update(self):
         # Get updated values from inputs

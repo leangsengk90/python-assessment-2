@@ -179,6 +179,58 @@ class UpdateReservationDialog(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.update_reservation)
         buttons.rejected.connect(self.reject)
+
+        # Access individual buttons for styling
+        save_button = buttons.button(QDialogButtonBox.StandardButton.Save)
+        cancel_button = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+
+        # Style the Save button
+        save_button.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #388e3c;
+            }
+            QPushButton:disabled {
+                background-color: #9e9e9e;
+                color: #d3d3d3;
+            }
+        """)
+
+        # Style the Cancel button
+        cancel_button.setStyleSheet("""
+            QPushButton {
+                font-size: 14px;
+                background-color: #f44336;
+                color: white;
+                border: none;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #e53935;
+            }
+            QPushButton:pressed {
+                background-color: #d32f2f;
+            }
+            QPushButton:disabled {
+                background-color: #9e9e9e;
+                color: #d3d3d3;
+            }
+        """)
+
+        # Add buttons to layout
         layout.addRow(buttons)
 
     def update_reservation(self):

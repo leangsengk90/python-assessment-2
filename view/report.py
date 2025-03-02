@@ -447,7 +447,19 @@ class UpdateInvoiceDialog(QDialog):
 
         # Save Button
         save_button = QPushButton("Save Changes")
-        save_button.setStyleSheet("background-color: #2ecc71; color: white; font-weight: bold;")
+        save_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #4CAF50;  /* Green background */
+                        color: white;               /* White text */
+                        font-weight: bold;          /* Bold text */
+                        padding: 10px 20px;         /* Padding around the button */
+                        border-radius: 10px;         /* Rounded corners */
+                        border: none;               /* No border */
+                    }
+                    QPushButton:hover {
+                        background-color: #45a049;  /* Darker green on hover */
+                    }
+                """)
         save_button.clicked.connect(self.save_changes)
         self.layout.addWidget(save_button)
 
@@ -476,7 +488,21 @@ class UpdateInvoiceDialog(QDialog):
 
             # 🔹 Remove Button
             remove_button = QPushButton("Remove")
-            remove_button.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold;")
+            remove_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #e74c3c; 
+                        color: white;               
+                        font-weight: bold;         
+                        padding: 4px 8px;        
+                        border-radius: 10px;         
+                        border: none;      
+                        margin: 4px 8px;  /* Add margin around the button */
+                    }
+                    QPushButton:hover {
+                        background-color: red;  
+                    }
+                """)
+
             remove_button.clicked.connect(lambda _, row=row_index: self.remove_order(row))  # Handle row removal
             self.table_widget.setCellWidget(row_index, 5, remove_button)
 

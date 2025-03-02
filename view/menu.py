@@ -254,22 +254,34 @@ class UpdateItemDialog(QDialog):
         self.image_input.setFixedHeight(30)
         self.image_button = QPushButton("Browse...")
         self.image_button.setStyleSheet("""
-                            background-color: darkblue; 
-                            color: white; 
-                            font-weight: bold;
-                            border-radius: 10px;
-                            padding: 10px;
+                            QPushButton {
+                                background-color: darkblue;  /* Green background */
+                                color: white;               /* White text */
+                                font-weight: bold;          /* Bold text */
+                                padding: 10px 20px;         /* Padding around the button */
+                                border-radius: 10px;         /* Rounded corners */
+                                border: none;               /* No border */
+                            }
+                            QPushButton:hover {
+                                background-color: blue;  /* Darker green on hover */
+                            }
                         """)
         self.image_button.clicked.connect(self.select_image)
 
         # Update Button
         self.update_button = QPushButton("Update Item")
         self.update_button.setStyleSheet("""
-                            background-color: #FFC300; 
-                            color: white; 
-                            font-weight: bold;
-                            border-radius: 10px;
-                            padding: 10px;
+                            QPushButton {
+                                background-color: #4CAF50;  /* Green background */
+                                color: white;               /* White text */
+                                font-weight: bold;          /* Bold text */
+                                padding: 10px 20px;         /* Padding around the button */
+                                border-radius: 10px;         /* Rounded corners */
+                                border: none;               /* No border */
+                            }
+                            QPushButton:hover {
+                                background-color: #45a049;  /* Darker green on hover */
+                            }
                         """)
         self.update_button.clicked.connect(self.update_item)
 
