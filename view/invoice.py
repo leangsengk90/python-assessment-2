@@ -225,32 +225,37 @@ class InvoiceView(QWidget):
             print(f"Failed to refresh invoice data: {e}")
 
     def generate_invoice_pdf(self):
-        """Generate the invoice as a PDF and view it."""
+        """Generate the invoice as a PDF with dynamic height and view it."""
         try:
-            # Get the latest invoice ID and increment it
             invoice_id = self.model.get_last_invoice_id()
-
-            # Set up the PDF file with custom page size (360x600 points)
             pdf_filename = "invoice.pdf"
-            custom_size = (360, 600)  # Custom width and height in points
-            c = canvas.Canvas(pdf_filename, pagesize=custom_size)
 
-            # Get the selected table number
             selected_table = self.table_number_dropdown.currentData()
-            # Check if the table number is None or not selected
             if selected_table is None:
-                # Show an alert if no table number is selected
                 QMessageBox.warning(self, "Error", "Please select a table number before generating the invoice.")
-                return  # Exit the method if no table number is selected
+                return
 
             invoice_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # Adjusted positions to fit the custom size
-            left_margin = 30  # Reduced left margin
-            column_width = 80  # Decreased column width to fit better
-            y_pos1 = 550  # Adjusted based on custom size
+            # Fetch invoice data
+            invoices = self.model.get_invoices(selected_table)
+            num_items = len(invoices)
 
-            # Define the title as the table number
+            # Define base height and calculate extra height based on the number of items
+            base_height = 600  # Minimum height
+            extra_height_per_item = 30  # Additional height per item
+            dynamic_height = base_height + (num_items * extra_height_per_item)
+
+            # Create the PDF canvas with the dynamic height
+            custom_size = (360, dynamic_height)
+            c = canvas.Canvas(pdf_filename, pagesize=custom_size)
+
+            # Adjusted positions
+            left_margin = 30
+            column_width = 80
+            y_pos1 = dynamic_height - 50  # Adjusted based on total height
+
+            # Title
             c.setFont("Helvetica-Bold", 16)
             c.drawString(130, y_pos1, f"Restaurant MS")
 
@@ -260,41 +265,31 @@ class InvoiceView(QWidget):
             c.drawString(left_margin, y_pos2 - 20, f"Date: {invoice_date}")
             c.drawString(left_margin, y_pos2 - 40, f"Invoice: {invoice_id}")
 
+            # Table Header
             y_pos3 = y_pos2 - 80
-            # Add a table header without table_number, order_id, and order_date
             c.setFont("Helvetica-Bold", 10)
             c.drawString(left_margin, y_pos3, "Menu Name")
             c.drawString(left_margin + column_width, y_pos3, "Unit Price")
             c.drawString(left_margin + 2 * column_width, y_pos3, "Quantity")
             c.drawString(left_margin + 3 * column_width, y_pos3, "Total")
 
-            # Fetch invoice data and print it
-            invoices = self.model.get_invoices(selected_table)
-
-            y_position = y_pos3 - 20  # Start printing rows
-
-            total_tax = 0
-            total_discount = 0
-            grand_total = 0
-            subtotal = 0  # Initialize subtotal
-            total_tax_amount = 0  # Accumulate tax amounts to calculate average tax
-            total_discount_amount = 0  # Accumulate discount amounts to calculate average discount
-            num_items = len(invoices)  # Number of items to calculate average
+            # Print invoice items
+            y_position = y_pos3 - 20
+            total_tax = total_discount = grand_total = subtotal = 0
+            total_tax_amount = total_discount_amount = 0
 
             for (order_id, table_number, order_date, menu_name, unit_price, qty, tax, discount) in invoices:
-                # Calculate total without tax and discount
                 total = unit_price * qty
                 tax_amount = (tax / 100) * total
                 discount_amount = (discount / 100) * total
 
-                # Accumulate the totals
                 total_tax += tax_amount
                 total_discount += discount_amount
                 grand_total += total + tax_amount - discount_amount
-                subtotal += total  # Accumulate the subtotal (without tax and discount)
+                subtotal += total
 
-                total_tax_amount += tax_amount  # Accumulate tax amounts
-                total_discount_amount += discount_amount  # Accumulate discount amounts
+                total_tax_amount += tax_amount
+                total_discount_amount += discount_amount
 
                 c.setFont("Helvetica", 10)
                 c.drawString(left_margin, y_position, menu_name)
@@ -302,13 +297,13 @@ class InvoiceView(QWidget):
                 c.drawString(left_margin + 2 * column_width, y_position, str(qty))
                 c.drawString(left_margin + 3 * column_width, y_position, f"${total:.2f}")
 
-                y_position -= 40  # Move down for the next row
+                y_position -= 40  # Move down for next row
 
-            # Calculate average tax and discount percentages
+            # Calculate average tax and discount
             avg_tax_percentage = (total_tax_amount / subtotal) * 100 if subtotal > 0 else 0
             avg_discount_percentage = (total_discount_amount / subtotal) * 100 if subtotal > 0 else 0
 
-            # Add Subtotal, Tax, Discount, and Grand Total with proper spacing
+            # Add totals
             c.setFont("Helvetica-Bold", 10)
             c.drawString(left_margin + 2 * column_width, y_position - 10, f"Subtotal: ${subtotal:.2f}")
             c.drawString(left_margin + 2 * column_width, y_position - 30,
@@ -317,23 +312,21 @@ class InvoiceView(QWidget):
                          f"Discount ({avg_discount_percentage:.2f}%): -${total_discount:.2f}")
             c.drawString(left_margin + 2 * column_width, y_position - 70, f"Grand Total: ${grand_total:.2f}")
 
-            # Save the PDF
+            # Save PDF
             c.save()
 
             # Update data in DB
             self.model.insert_new_invoice(invoice_date)
-
             self.model.update_order_invoice(selected_table, invoice_id)
-
             self.model.update_order_status_by_invoice(invoice_id)
 
             self.load_invoice_data()
             self.load_table_numbers()
 
-            # Open the generated PDF using the default system PDF viewer
+            # Open the generated PDF
             if os.name == 'nt':  # Windows
                 os.startfile(pdf_filename)
-            elif os.name == 'posix':  # macOS and Linux
+            elif os.name == 'posix':  # macOS/Linux
                 webbrowser.open(f"file://{os.path.realpath(pdf_filename)}")
 
         except Exception as e:

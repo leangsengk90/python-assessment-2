@@ -108,11 +108,33 @@ class Model:
         self.cursor.execute("SELECT COUNT(*) FROM menu")
         if self.cursor.fetchone()[0] == 0:
             sample_data = [
+                # Normal Food
                 ("Fried Rice", 2.5, "fried_rice.png"),
-                ("Coca Cola", 1.2, "coca_cola.png"),
+                ("Pasta", 4.0, "pasta.png"),
+                ("Grilled Chicken", 6.5, "grilled_chicken.png"),
+                ("Sushi", 7.0, "sushi.png"),
+                ("Steak", 8.5, "steak.png"),
+                ("Dumplings", 4.5, "dumplings.png"),
+                ("spaghetti", 6.0, "spaghetti.png"),
+                ("Green Salad", 3.0, "green_salad.png"),
+
+                # Fast Food
                 ("Burger", 3.0, "burger.png"),
-                # More sample data...
+                ("Pizza", 5.5, "pizza.png"),
+                ("French Fries", 2.0, "french_fries.png"),
+                ("Tacos", 3.5, "tacos.png"),
+                ("Sandwich", 3.2, "sandwich.png"),
+                ("Hot Dog", 2.8, "hot_dog.png"),
+                ("Ice Cream", 1.8, "ice_cream.png"),
+
+                # Drinks
+                ("Coca Cola", 1.2, "coca_cola.png"),
+                ("Orange Juice", 2.2, "orange_juice.png"),
+                ("Milkshake", 2.8, "milkshake.png"),
+                ("Coffee", 1.5, "coffee.png"),
+                ("Mojito", 3.5, "mojito.png"),
             ]
+
             self.cursor.executemany("INSERT INTO menu (name, unit_price, image) VALUES (?, ?, ?)", sample_data)
 
             # Insert sample table numbers
@@ -124,7 +146,13 @@ class Model:
                     (3, "Outdoor seating"),
                     (4, "Private dining area"),
                     (5, "Bar counter seat"),
+                    (6, "Family booth"),
+                    (7, "Corner table"),
+                    (8, "High-top table"),
+                    (9, "Garden view table"),
+                    (10, "Romantic candlelight table"),
                 ]
+
                 self.cursor.executemany("INSERT INTO tables (table_number, description) VALUES (?, ?)", table_data)
 
             # Check if reservation data exists
@@ -134,7 +162,15 @@ class Model:
                     ("1, 2, 3", "Dara", "123456789", "2025-02-15", "18:30"),
                     ("5", "Nita", "987654321", "2025-02-16", "19:00"),
                     ("4", "Bora", "555123456", "2025-02-17", "20:15"),
+                    ("6", "Sokha", "777888999", "2025-02-18", "18:45"),
+                    ("7, 8", "Vann", "222333444", "2025-02-19", "19:30"),
+                    ("9", "Srey", "666777888", "2025-02-20", "20:00"),
+                    ("10", "Pisey", "999000111", "2025-02-21", "18:00"),
+                    ("2, 3", "Mony", "111222333", "2025-02-22", "19:15"),
+                    ("5, 6", "Rina", "444555666", "2025-02-23", "20:30"),
+                    ("1", "Chan", "888999000", "2025-02-24", "17:45"),
                 ]
+
                 self.cursor.executemany(
                     "INSERT INTO reservations (tables, name, phone, date, time) VALUES (?, ?, ?, ?, ?)",
                     sample_reservations)
