@@ -47,14 +47,24 @@ class Model:
                     description TEXT
                 )
             """)
+        # self.cursor.execute("""
+        #     CREATE TABLE IF NOT EXISTS reservations (
+        #         reserve_number INTEGER PRIMARY KEY AUTOINCREMENT,
+        #         tables TEXT NOT NULL,
+        #         name TEXT NOT NULL,
+        #         phone TEXT NOT NULL,
+        #         date TEXT NOT NULL,
+        #         time TEXT NOT NULL
+        #     )
+        # """)
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS reservations (
                 reserve_number INTEGER PRIMARY KEY AUTOINCREMENT,
                 tables TEXT NOT NULL,
                 name TEXT NOT NULL,
                 phone TEXT NOT NULL,
-                date TEXT NOT NULL,
-                time TEXT NOT NULL
+                start_time DATETIME NOT NULL, 
+                end_time DATETIME NOT NULL
             )
         """)
         self.cursor.execute("""
@@ -159,20 +169,20 @@ class Model:
             self.cursor.execute("SELECT COUNT(*) FROM reservations")
             if self.cursor.fetchone()[0] == 0:
                 sample_reservations = [
-                    ("1, 2, 3", "Dara", "123456789", "2025-02-15", "18:30"),
-                    ("5", "Nita", "987654321", "2025-02-16", "19:00"),
-                    ("4", "Bora", "555123456", "2025-02-17", "20:15"),
-                    ("6", "Sokha", "777888999", "2025-02-18", "18:45"),
-                    ("7, 8", "Vann", "222333444", "2025-02-19", "19:30"),
-                    ("9", "Srey", "666777888", "2025-02-20", "20:00"),
-                    ("10", "Pisey", "999000111", "2025-02-21", "18:00"),
-                    ("2, 3", "Mony", "111222333", "2025-02-22", "19:15"),
-                    ("5, 6", "Rina", "444555666", "2025-02-23", "20:30"),
-                    ("1", "Chan", "888999000", "2025-02-24", "17:45"),
+                    ("1, 2, 3", "Dara", "123456789", "2025-02-15 18:30:00", "2025-02-15 20:30:00"),
+                    ("5", "Nita", "987654321", "2025-02-16 19:00:00", "2025-02-16 21:00:00"),
+                    ("4", "Bora", "555123456", "2025-02-17 20:15:00", "2025-02-17 22:15:00"),
+                    ("6", "Sokha", "777888999", "2025-02-18 18:45:00", "2025-02-18 20:45:00"),
+                    ("7, 8", "Vann", "222333444", "2025-02-19 19:30:00", "2025-02-19 21:30:00"),
+                    ("9", "Srey", "666777888", "2025-02-20 20:00:00", "2025-02-20 22:00:00"),
+                    ("10", "Pisey", "999000111", "2025-02-21 18:00:00", "2025-02-21 20:00:00"),
+                    ("2, 3", "Mony", "111222333", "2025-02-22 19:15:00", "2025-02-22 21:15:00"),
+                    ("5, 6", "Rina", "444555666", "2025-02-23 20:30:00", "2025-02-23 22:30:00"),
+                    ("1", "Chan", "888999000", "2025-02-24 17:45:00", "2025-02-24 19:45:00"),
                 ]
 
                 self.cursor.executemany(
-                    "INSERT INTO reservations (tables, name, phone, date, time) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO reservations (tables, name, phone, start_time, end_time) VALUES (?, ?, ?, ?, ?)",
                     sample_reservations)
 
             # Check if invoice status data exists
@@ -291,12 +301,12 @@ class Model:
     # -------- Reservation Methods -------- #
 
     def get_reservations(self):
-        self.cursor.execute("SELECT reserve_number, tables, name, phone, date, time FROM reservations")
+        self.cursor.execute("SELECT reserve_number, tables, name, phone, start_time, end_time FROM reservations")
         return self.cursor.fetchall()
 
     def add_reservation(self, tables, name, phone, date, time):
         try:
-            self.cursor.execute("INSERT INTO reservations (tables, name, phone, date, time) VALUES (?, ?, ?, ?, ?)",
+            self.cursor.execute("INSERT INTO reservations (tables, name, phone, start_time, end_time) VALUES (?, ?, ?, ?, ?)",
                                 (tables, name, phone, date, time))
             self.conn.commit()
             return True
@@ -308,7 +318,7 @@ class Model:
         try:
             self.cursor.execute("""
                    UPDATE reservations 
-                   SET tables = ?, name = ?, phone = ?, date = ?, time = ? 
+                   SET tables = ?, name = ?, phone = ?, start_time = ?, end_time = ? 
                    WHERE reserve_number = ?
                """, (tables, name, phone, date, time, reserve_number))
             self.conn.commit()

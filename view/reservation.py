@@ -1,5 +1,6 @@
+from datetime import datetime
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QMessageBox, \
-    QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit, QHeaderView
+    QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit, QHeaderView, QDateTimeEdit
 from PyQt6.QtCore import QDate, QTime
 from model.model import Model
 
@@ -44,7 +45,7 @@ class ReservationView(QWidget):
         data = self.model.get_reservations()  # Get reservation data
 
         self.table_widget.setColumnCount(7)
-        self.table_widget.setHorizontalHeaderLabels(["Reserve Number", "Table", "Name", "Phone", "Date", "Time", "Action"])
+        self.table_widget.setHorizontalHeaderLabels(["Reserve Number", "Table", "Name", "Phone", "Start Time", "End Time", "Action"])
         self.table_widget.setColumnWidth(0, 100)
         self.table_widget.setColumnWidth(1, 100)
         self.table_widget.setColumnWidth(2, 150)
@@ -138,14 +139,14 @@ class ReservationView(QWidget):
 
 
 class UpdateReservationDialog(QDialog):
-    def __init__(self, model, reserve_number, tables, name, phone, date, time, parent=None):
+    def __init__(self, model, reserve_number, tables, name, phone, start_time, end_time, parent=None):
         super().__init__(parent)
         self.model = model
         self.reserve_number = reserve_number
         self.setWindowTitle("Update Reservation")
-        self.init_ui(tables, name, phone, date, time)
+        self.init_ui(tables, name, phone, start_time, end_time)
 
-    def init_ui(self, tables, name, phone, date, time):
+    def init_ui(self, tables, name, phone, start_time, end_time):
         layout = QFormLayout(self)
 
         # Reserve Number (Read-only)
@@ -164,16 +165,17 @@ class UpdateReservationDialog(QDialog):
         self.phone_input = QLineEdit(phone)
         layout.addRow("Phone:", self.phone_input)
 
-        # Date (Editable, Calendar Picker)
-        self.date_input = QDateEdit(calendarPopup=True)
-        self.date_input.setDate(QDate.fromString(date, "yyyy-MM-dd"))  # Set initial date
-        self.date_input.setDisplayFormat("yyyy-MM-dd")
-        layout.addRow("Date:", self.date_input)
+        self.start_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.start_datetime_edit.setFixedWidth(400)
+        self.start_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.start_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        layout.addRow("Star Time:", self.start_datetime_edit)
 
-        # Time (Editable, Time Picker)
-        self.time_input = QTimeEdit()
-        self.time_input.setTime(QTime.fromString(time, "HH:mm"))  # Set initial time
-        layout.addRow("Time:", self.time_input)
+        self.end_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.end_datetime_edit.setFixedWidth(400)
+        self.end_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.end_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        layout.addRow("End Time:", self.end_datetime_edit)
 
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
@@ -237,11 +239,11 @@ class UpdateReservationDialog(QDialog):
         tables = self.tables_input.text().strip()
         name = self.name_input.text().strip()
         phone = self.phone_input.text().strip()
-        date = self.date_input.date().toString("yyyy-MM-dd")
-        time = self.time_input.time().toString("HH:mm")
+        start_time = self.start_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
+        end_time = self.end_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
 
-        if tables and name and phone and date and time:
-            self.model.update_reservation(self.reserve_number, tables, name, phone, date, time)
+        if tables and name and phone and start_time and end_time:
+            self.model.update_reservation(self.reserve_number, tables, name, phone, start_time, end_time)
         self.accept()
 
 
@@ -267,16 +269,18 @@ class AddReservationDialog(QDialog):
         self.phone_input = QLineEdit()
         layout.addRow("Phone:", self.phone_input)
 
-        # Date (Editable, Calendar Picker)
-        self.date_input = QDateEdit(calendarPopup=True)
-        self.date_input.setDate(QDate.currentDate())  # Default to today
-        self.date_input.setDisplayFormat("yyyy-MM-dd")
-        layout.addRow("Date:", self.date_input)
+        self.start_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.start_datetime_edit.setFixedWidth(400)
+        self.start_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.start_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        layout.addRow("Start Time:", self.start_datetime_edit)
 
-        # Time (Editable, Time Picker)
-        self.time_input = QTimeEdit()
-        self.time_input.setTime(QTime.currentTime())  # Default to current time
-        layout.addRow("Time:", self.time_input)
+        self.end_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
+        self.end_datetime_edit.setFixedWidth(400)
+        self.end_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.end_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        layout.addRow("End Time:", self.end_datetime_edit)
+
 
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
@@ -288,9 +292,9 @@ class AddReservationDialog(QDialog):
         tables = self.tables_input.text().strip()
         name = self.name_input.text().strip()
         phone = self.phone_input.text().strip()
-        date = self.date_input.date().toString("yyyy-MM-dd")
-        time = self.time_input.time().toString("HH:mm")
+        start_time = self.start_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
+        end_time = self.end_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
 
-        if tables and name and phone and date and time:
-            self.model.add_reservation(tables, name, phone, date, time)
+        if tables and name and phone and start_time and end_time:
+            self.model.add_reservation(tables, name, phone, start_time, end_time)
         self.accept()
