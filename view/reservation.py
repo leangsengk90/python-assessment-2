@@ -1,7 +1,7 @@
 from datetime import datetime
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QMessageBox, \
     QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit, QHeaderView, QDateTimeEdit
-from PyQt6.QtCore import QDate, QTime
+from PyQt6.QtCore import QDate, QTime, QDateTime
 from model.model import Model
 
 class ReservationView(QWidget):
@@ -168,13 +168,13 @@ class UpdateReservationDialog(QDialog):
         self.start_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
         self.start_datetime_edit.setFixedWidth(400)
         self.start_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
-        self.start_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        self.start_datetime_edit.setDateTime(QDateTime.fromString(start_time, "yyyy-MM-dd HH:mm:ss"))  # Default to current date/time
         layout.addRow("Star Time:", self.start_datetime_edit)
 
         self.end_datetime_edit = QDateTimeEdit(self, calendarPopup=True)
         self.end_datetime_edit.setFixedWidth(400)
         self.end_datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
-        self.end_datetime_edit.setDateTime(datetime.now())  # Default to current date/time
+        self.end_datetime_edit.setDateTime(QDateTime.fromString(end_time, "yyyy-MM-dd HH:mm:ss"))  # Default to current date/time
         layout.addRow("End Time:", self.end_datetime_edit)
 
         # Buttons
