@@ -1,6 +1,7 @@
 from datetime import datetime
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QMessageBox, \
-    QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit, QHeaderView, QDateTimeEdit
+    QDialog, QFormLayout, QLabel, QLineEdit, QDialogButtonBox, QDateEdit, QTimeEdit, QHeaderView, QDateTimeEdit, \
+    QSpinBox
 from PyQt6.QtCore import QDate, QTime, QDateTime
 from model.model import Model
 
@@ -154,8 +155,19 @@ class UpdateReservationDialog(QDialog):
         layout.addRow("Reserve Number:", self.reserve_number_label)
 
         # Tables (Editable)
-        self.tables_input = QLineEdit(str(tables))
-        layout.addRow("Table(s):", self.tables_input)
+        # self.tables_input = QLineEdit(str(tables))
+        # layout.addRow("Table:", self.tables_input)
+
+        valid_table_numbers = self.model.get_valid_table_numbers()
+
+        self.tables_input = QSpinBox()
+        if valid_table_numbers:
+            min_table = min(valid_table_numbers)
+            max_table = max(valid_table_numbers)
+            self.tables_input.setRange(min_table, max_table)  # Restrict to valid table numbers
+            self.tables_input.setValue(tables)
+
+        layout.addRow("Table:", self.tables_input)
 
         # Name (Editable)
         self.name_input = QLineEdit(name)
@@ -257,9 +269,17 @@ class AddReservationDialog(QDialog):
     def init_ui(self):
         layout = QFormLayout(self)
 
-        # Tables (Editable)
-        self.tables_input = QLineEdit()
-        layout.addRow("Table(s):", self.tables_input)
+        # Fetch valid table numbers from the model
+        valid_table_numbers = self.model.get_valid_table_numbers()  # Ensure this method exists
+
+        # Table Number Input (Restricted to valid numbers)
+        self.tables_input = QSpinBox()
+        if valid_table_numbers:
+            min_table = min(valid_table_numbers)
+            max_table = max(valid_table_numbers)
+            self.tables_input.setRange(min_table, max_table)  # Restrict to valid table numbers
+
+        layout.addRow("Table:", self.tables_input)
 
         # Name (Editable)
         self.name_input = QLineEdit()
@@ -286,6 +306,57 @@ class AddReservationDialog(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.add_reservation)
         buttons.rejected.connect(self.reject)
+
+        # Access individual buttons for styling
+        save_button = buttons.button(QDialogButtonBox.StandardButton.Save)
+        cancel_button = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+
+        # Style the Save button
+        save_button.setStyleSheet("""
+                    QPushButton {
+                        font-size: 14px;
+                        background-color: #4CAF50;
+                        color: white;
+                        border: none;
+                        padding: 10px;
+                        margin: 5px;
+                        border-radius: 5px;
+                    }
+                    QPushButton:hover {
+                        background-color: #45a049;
+                    }
+                    QPushButton:pressed {
+                        background-color: #388e3c;
+                    }
+                    QPushButton:disabled {
+                        background-color: #9e9e9e;
+                        color: #d3d3d3;
+                    }
+                """)
+
+        # Style the Cancel button
+        cancel_button.setStyleSheet("""
+                    QPushButton {
+                        font-size: 14px;
+                        background-color: #f44336;
+                        color: white;
+                        border: none;
+                        padding: 10px;
+                        margin: 5px;
+                        border-radius: 5px;
+                    }
+                    QPushButton:hover {
+                        background-color: #e53935;
+                    }
+                    QPushButton:pressed {
+                        background-color: #d32f2f;
+                    }
+                    QPushButton:disabled {
+                        background-color: #9e9e9e;
+                        color: #d3d3d3;
+                    }
+                """)
+
         layout.addRow(buttons)
 
     def add_reservation(self):
@@ -294,6 +365,10 @@ class AddReservationDialog(QDialog):
         phone = self.phone_input.text().strip()
         start_time = self.start_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
         end_time = self.end_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
+
+        if not name or not phone:
+            QMessageBox.warning(self, "Input Error", "Customer Name and Phone Number are required!")
+            return
 
         if tables and name and phone and start_time and end_time:
             self.model.add_reservation(tables, name, phone, start_time, end_time)
