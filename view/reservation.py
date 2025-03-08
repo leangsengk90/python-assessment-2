@@ -191,7 +191,7 @@ class UpdateReservationDialog(QDialog):
 
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.update_reservation)
+        buttons.accepted.connect(lambda: self.update_reservation(start_time, end_time))
         buttons.rejected.connect(self.reject)
 
         # Access individual buttons for styling
@@ -247,12 +247,23 @@ class UpdateReservationDialog(QDialog):
         # Add buttons to layout
         layout.addRow(buttons)
 
-    def update_reservation(self):
+    def update_reservation(self, old_start, old_end):
         tables = self.tables_input.text().strip()
         name = self.name_input.text().strip()
         phone = self.phone_input.text().strip()
         start_time = self.start_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
         end_time = self.end_datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
+
+        print("Old Time:", old_start)
+        print("New Time:", start_time)
+
+        if old_start == start_time and old_end == end_time:
+           print("Time isn't change!")
+        else:
+            if self.model.is_table_reserved(tables, start_time, end_time):
+                QMessageBox.warning(self, "Reservation",
+                                    "The selected table is already reserved during this time")
+                return
 
         if tables and name and phone and start_time and end_time:
             self.model.update_reservation(self.reserve_number, tables, name, phone, start_time, end_time)

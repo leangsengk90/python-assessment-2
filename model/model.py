@@ -304,23 +304,23 @@ class Model:
         self.cursor.execute("SELECT reserve_number, tables, name, phone, start_time, end_time FROM reservations")
         return self.cursor.fetchall()
 
-    def add_reservation(self, tables, name, phone, date, time):
+    def add_reservation(self, tables, name, phone, start_time, end_time):
         try:
             self.cursor.execute("INSERT INTO reservations (tables, name, phone, start_time, end_time) VALUES (?, ?, ?, ?, ?)",
-                                (tables, name, phone, date, time))
+                                (tables, name, phone, start_time, end_time))
             self.conn.commit()
             return True
         except sqlite3.Error as e:
             print(f"Error inserting reservation: {e}")
             return False
 
-    def update_reservation(self, reserve_number, tables, name, phone, date, time):
+    def update_reservation(self, reserve_number, tables, name, phone, start_time, end_time):
         try:
             self.cursor.execute("""
                    UPDATE reservations 
                    SET tables = ?, name = ?, phone = ?, start_time = ?, end_time = ? 
                    WHERE reserve_number = ?
-               """, (tables, name, phone, date, time, reserve_number))
+               """, (tables, name, phone, start_time, end_time, reserve_number))
             self.conn.commit()
             return True
         except sqlite3.Error as e:
