@@ -370,6 +370,12 @@ class AddReservationDialog(QDialog):
             QMessageBox.warning(self, "Input Error", "Customer Name and Phone Number are required!")
             return
 
+            # Check if the table is already reserved
+        if self.model.is_table_reserved(tables, start_time, end_time):
+            QMessageBox.warning(self, "Reservation Conflict",
+                                "The selected table is already reserved during this time.")
+            return
+
         if tables and name and phone and start_time and end_time:
             self.model.add_reservation(tables, name, phone, start_time, end_time)
         self.accept()

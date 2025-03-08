@@ -336,6 +336,21 @@ class Model:
             print(f"Error deleting reservation: {e}")
             return False
 
+    def is_table_reserved(self, tables, start_time, end_time):
+        query = """
+        SELECT COUNT(*) FROM reservations
+        WHERE tables = ?
+        AND (
+            (start_time < ? AND end_time > ?)  -- Overlapping reservation
+            OR (start_time >= ? AND start_time < ?) -- Starts within another reservation
+        )
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(query, (tables, end_time, start_time, start_time, end_time))
+        result = cursor.fetchone()  # Fetch the first row
+
+        return result[0] > 0 if result else False  # Ensure result is not None
+
     def close_connection(self):
         """Close the connection properly."""
         try:
